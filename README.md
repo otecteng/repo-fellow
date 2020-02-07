@@ -1,13 +1,15 @@
 Repo data collector and inspector
 
-1.install dependency
+1.install dependency  
 
-2.setting env
-export GIT_SITE = "https://xxx"
-export GIT_TOKEN = "xxx"
-export GIT_SERVER = "github"
+2.setting env  
+export GIT_SITE = "https://xxx"  
 
-3.execute crawl projects
+export GIT_TOKEN = "xxx"  
+
+export GIT_SERVER = "github"  
+
+3.execute crawl projects  
 python3 main.py
 
 base on gitlab data (simple), mapping github data to gitlab 
