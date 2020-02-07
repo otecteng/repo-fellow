@@ -1,0 +1,7 @@
+.vscode/
+__pycache__/
+data/
+doc/
+env/
+infrastructure/
+infrastructure/
