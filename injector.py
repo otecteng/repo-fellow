@@ -171,11 +171,17 @@ class Injector:
         else:
             return self.db_session.query(Project)
 
+    def get_project(self,path):
+        return self.db_session.query(Project).get(path)
+
     def get_commits(self,start_from = None):
         if start_from:
             return self.db_session.query(Commit).filter(Commit.iid >= start_from)
         else:
             return self.db_session.query(Commit)
+
+    def get_project_last_commit(self,path):
+        return self.db_session.query(Commit).filter(Commit.project == path).order_by(Commit.created_at.desc()).first()
 
     def db_commit(self):
         self.db_session.commit()

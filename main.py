@@ -1,16 +1,19 @@
 import os
+import datetime
 import organization
 from parser import Parser
 from injector import Injector,Commit
+from crawler import Crawler
 from github_client import GithubClient
 from gitlab_client import GitlabClient
 # import gevent
 
-def get_github_commits(project):
-    commits = Parser.parse_commits(client.getProjectCommits(project),format="github")
+def get_commits(project,since = None, limit = None):
+    commits = Crawler.create_client(os.environ['GIT_SERVER'],os.environ['GIT_SITE'],os.environ['GIT_TOKEN']).getProjectCommits(project, since = since, limit = limit )
+    commits = Parser.parse_commits(commits,format="github")
     for j in commits:
-        j.project = i.path
-    Injector(password=os.environ['FELLOW_PASSWORD']).insert_data(commits)
+        j.project = project
+    # Injector(password = os.environ['FELLOW_PASSWORD']).insert_data(commits)
     return commits
 
 def get_github_commit(commit):
@@ -32,14 +35,19 @@ def get_gitlab_projects():
     for i in Parser.parse_projects(projects,format = "gitlab"):
         print(i)
 
-# injector.db_test()
-# injector.db_commit()
-get_github_projects()
-# if os.environ['GIT_SERVER'] == "github":
-#     get_github_projects()
 
-# if os.environ['GIT_SERVER'] == "gitlab":
-#     get_gitlab_projects()
+injector = Injector(password = os.environ['FELLOW_PASSWORD'])
+projects = injector.get_projcets()
+for i in projects:
+    print("update project commits:{}".format(i.path))
+    commit = injector.get_project_last_commit(i.path)
+    if commit is not None:
+        new_commits = get_commits(commit.project,since = commit.created_at + datetime.timedelta(seconds=1))
+    else:
+        new_commits = get_commits(commit.project)
+    print("new records of {} is:{}".format(i.path,len(new_commits)))
+    Injector(password = os.environ['FELLOW_PASSWORD']).insert_data(new_commits)
+
 
 # g = [gevent.spawn(get, url) for url in urls]
 # gevent.joinall(g)
