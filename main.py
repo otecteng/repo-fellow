@@ -35,18 +35,25 @@ def get_gitlab_projects():
     for i in Parser.parse_projects(projects,format = "gitlab"):
         print(i)
 
-
-injector = Injector(password = os.environ['FELLOW_PASSWORD'])
-projects = injector.get_projcets()
-for i in projects:
-    print("update project commits:{}".format(i.path))
-    commit = injector.get_project_last_commit(i.path)
-    if commit is not None:
-        new_commits = get_commits(commit.project,since = commit.created_at + datetime.timedelta(seconds=1))
+# read github project commits count by GraphQL API
+commits = Crawler.create_client(os.environ['GIT_SERVER'],os.environ['GIT_SITE'],os.environ['GIT_TOKEN']).getAllProjectCommitsCount("owner")
+for i in commits:
+    if i["ref"]:
+        print("{}:{}".format(i["name"],i["ref"]["target"]["history"]["totalCount"]))
     else:
-        new_commits = get_commits(commit.project)
-    print("new records of {} is:{}".format(i.path,len(new_commits)))
-    Injector(password = os.environ['FELLOW_PASSWORD']).insert_data(new_commits)
+        print("[ERROR]: {} has none history record".format(i["name"]))
+
+# injector = Injector(password = os.environ['FELLOW_PASSWORD'])
+# projects = injector.get_projcets()
+# for i in projects:
+#     print("update project commits:{}".format(i.path))
+#     commit = injector.get_project_last_commit(i.path)
+#     if commit is not None:
+#         new_commits = get_commits(commit.project,since = commit.created_at + datetime.timedelta(seconds=1))
+#     else:
+#         new_commits = get_commits(commit.project)
+#     print("new records of {} is:{}".format(i.path,len(new_commits)))
+#     Injector(password = os.environ['FELLOW_PASSWORD']).insert_data(new_commits)
 
 
 # g = [gevent.spawn(get, url) for url in urls]

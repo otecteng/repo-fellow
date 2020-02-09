@@ -174,9 +174,9 @@ class Injector:
     def get_project(self,path):
         return self.db_session.query(Project).get(path)
 
-    def get_commits(self,start_from = None):
-        if start_from:
-            return self.db_session.query(Commit).filter(Commit.iid >= start_from)
+    def get_commits(self,project = None):
+        if project:
+            return self.db_session.query(Commit).filter(Commit.project == project)
         else:
             return self.db_session.query(Commit)
 
