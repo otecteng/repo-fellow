@@ -10,7 +10,7 @@ export GIT_TOKEN = "xxx"
 export GIT_SERVER = "github"  
 
 3.execute crawl projects  
-python3 main.py
+python3 main.py project list
 
 base on gitlab data (simple), mapping github data to gitlab 
 

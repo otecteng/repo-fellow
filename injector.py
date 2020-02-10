@@ -155,8 +155,8 @@ class Event:
         return Event(data)
 
 class Injector:
-    def __init__(self,user = "root", password = "", host = "localhost", database = "repo"):
-        self.engine = create_engine("mysql+pymysql://{}:{}@{}:3306/{}?charset=utf8mb4".format(user,password,host,database))
+    def __init__(self,db_user = "repo", db_password = "", host = "localhost", database = "repo_fellow"):
+        self.engine = create_engine("mysql+pymysql://{}:{}@{}:3306/{}?charset=utf8mb4".format(db_user,db_password,host,database))
         DBSession = sessionmaker(bind = self.engine)
         self.db_session = DBSession()
     

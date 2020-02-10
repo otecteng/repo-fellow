@@ -5,12 +5,15 @@ Usage:
     repo-fellow user <command> [<args>]
     repo-fellow commit <command> [<args>]
     repo-fellow event <command> [<args>]
+    repo-fellow db <command> [<args>]
+
 Options: 
     -h,--help        
 
 Example:
     repo-fellow projects remote owner
     repo-fellow projects list
+    repo-fellow projects import
     repo-fellow commit update *
     repo-fellow commit update project_x
 """
@@ -20,14 +23,21 @@ from docopt import docopt
 from crawler import Crawler
 from injector import Injector,Commit
 from parser import Parser
+from repo_mysql import RepoMySQL
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Repo Fellow')
     server, site, token = os.environ['GIT_SERVER'], os.environ['GIT_SITE'], os.environ['GIT_TOKEN']
     db_user, db_password = "repo",os.environ['FELLOW_PASSWORD']
     command = arguments["<command>"]
     if arguments["project"]:
+        injector = Injector(db_user = db_user, db_password = db_password)
         if command == "list":
-            print("not implemented")
+            for i in injector.get_projcets():
+                print(i)
+        if command == "import":
+            data = Crawler.create_client(server,site,token).getProjects()
+            injector.insert_data(Parser.parse_projects(data))
+            print("[INFO] total imported projects {}".format(len(data)))
         if command == "remote":
             commits = Crawler.create_client(server,site,token).getAllProjectCommitsCount(arguments["<args>"])
             for i in commits:
@@ -57,3 +67,7 @@ if __name__ == '__main__':
                 for j in new_commits:
                     j.project = project
                 Injector(password = db_password).insert_data(new_commits)
+                
+    if arguments["db"]:
+        if command == "init":
+            RepoMySQL().init_db(os.environ['DB_PASSWORD'])
