@@ -113,11 +113,16 @@ class Commit(Base):
 
     @staticmethod
     def from_github(data):
-        # sample: "date":"2020-01-10T09:20:07Z"
-        data["commit"]["author"]["date"] = datetime.datetime.strptime(data["commit"]["author"]["date"][:19], "%Y-%m-%dT%H:%M:%S")
-        author = data["commit"]["author"]
-        content = {"id":data["sha"],"author_name":author["name"],"author_email":author["email"],"authored_date":author["date"],"message":data["commit"]["message"][:1000]}
-        return Commit(content)
+        # path : commit/commiter
+        data["commit"]["committer"]["date"] = datetime.datetime.strptime(data["commit"]["committer"]["date"][:19], "%Y-%m-%dT%H:%M:%S")
+        author = data["commit"]["committer"]
+        content = {"id":data["sha"],
+            "author_name":author["name"],"author_email":author["email"],"authored_date":author["date"],
+            "message":data["commit"]["message"][:1000]
+        }
+        ret = Commit(content)
+        ret.issue = Commit.find_issue(content["message"])
+        return ret
 
     @staticmethod
     def append_count_github(commit,data):
@@ -165,7 +170,7 @@ class Injector:
             self.db_session.add(i)
         self.db_session.commit()
     
-    def get_projcets(self,start_from = None):
+    def get_projects(self,start_from = None):
         if start_from:
             return self.db_session.query(Project).filter(Project.path >= start_from)
         else:

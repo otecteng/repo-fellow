@@ -27,10 +27,10 @@ from repo_mysql import RepoMySQL
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='Repo Fellow')
     server, site, token = os.environ['GIT_SERVER'], os.environ['GIT_SITE'], os.environ['GIT_TOKEN']
-    db_user, db_password = "repo",os.environ['FELLOW_PASSWORD']
+    db_user, db_password, db = os.environ['FELLOW_USER'] or "repo", os.environ['FELLOW_PASSWORD'] or "fellow", os.environ['FELLOW_DB'] or "repo_fellow"
     command = arguments["<command>"]
     if arguments["project"]:
-        injector = Injector(db_user = db_user, db_password = db_password)
+        injector = Injector(db_user = db_user, db_password = db_password,database = db)
         if command == "list":
             for i in injector.get_projcets():
                 print(i)
@@ -48,7 +48,8 @@ if __name__ == '__main__':
 
     if arguments["commit"]:
         if command == "update":
-            injector = Injector(password = db_password)
+            injector = Injector(db_user = db_user, db_password = db_password,database = db)
+            print("{}{}".format(db_user,db_password))
             if arguments["<args>"]:
                 projects = [injector.get_project(arguments["<args>"])]
             else:
@@ -66,7 +67,7 @@ if __name__ == '__main__':
                 new_commits = Parser.parse_commits(commits,format="github")
                 for j in new_commits:
                     j.project = project
-                Injector(password = db_password).insert_data(new_commits)
+                Injector(db_user = db_user, db_password = db_password,database = db).insert_data(new_commits)
                 
     if arguments["db"]:
         if command == "init":
