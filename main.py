@@ -6,6 +6,7 @@ Usage:
     repo-fellow commit <command> [<args>]
     repo-fellow event <command> [<args>]
     repo-fellow db <command> [<args>]
+    repo-fellow pr <command> [<args>]
 
 Options: 
     -h,--help        
@@ -19,21 +20,29 @@ Example:
 """
 import os
 import datetime
+import logging
 from docopt import docopt
 from crawler import Crawler
 from injector import Injector,Commit
 from parser import Parser
 from repo_mysql import RepoMySQL
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='Repo Fellow')
+    logging.basicConfig(filename = "log/fellow.log", level = logging.INFO, format = "%(asctime)s %(message)s", filemode='a')
+    logger = logging.getLogger()    
+    
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    logger.addHandler(ch)
+
+    arguments = docopt(__doc__, version = 'Repo Fellow')
     server, site, token = os.environ['GIT_SERVER'], os.environ['GIT_SITE'], os.environ['GIT_TOKEN']
     db_user, db_password, db = os.environ['FELLOW_USER'] or "repo", os.environ['FELLOW_PASSWORD'] or "fellow", os.environ['FELLOW_DB'] or "repo_fellow"
     command = arguments["<command>"]
+    injector = Injector(db_user = db_user, db_password = db_password,database = db)
     if arguments["project"]:
-        injector = Injector(db_user = db_user, db_password = db_password,database = db)
         if command == "list":
-            for i in injector.get_projcets():
-                print(i)
+            for i in injector.get_projects():
+                logging.info(i)
         if command == "import":
             data = Crawler.create_client(server,site,token).getProjects()
             injector.insert_data(Parser.parse_projects(data))
@@ -45,6 +54,19 @@ if __name__ == '__main__':
                     print("{}:{}".format(i["name"],i["ref"]["target"]["history"]["totalCount"]))
                 else:
                     print("[ERROR]: {} has none history record".format(i["name"]))
+
+    if arguments["user"]:
+        if command == "import":
+            data = Crawler.create_client(server,site,token).get_users()
+            injector.insert_data(Parser.parse_users(data))
+            print("[INFO] total imported users {}".format(len(data)))
+
+    if arguments["pr"]:
+        if command == "import":
+            project = arguments["<args>"]
+            data = Crawler.create_client(server,site,token).get_pull_requests(project)
+            injector.insert_data(Parser.parse_pulls(data))
+            print("[INFO] total imported pulls {}".format(len(data)))
 
     if arguments["commit"]:
         if command == "update":

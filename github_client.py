@@ -1,4 +1,5 @@
 import json
+import time
 import organization
 import json
 from crawler_client import CrawlerClient
@@ -67,4 +68,28 @@ class GithubClient(CrawlerClient):
     def getCommit(self,project,commit):
         return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
 
+    def get_user_detail(self,login):
+        return self.getSingleResource("/api/v3/users/{}".format(login))
 
+    def get_users(self,since = ""):
+        ret = []
+        while True:
+            try:
+                data = self.getSingleResource("/api/v3/users?since={}&per_page=100".format(since))
+                ret = ret + data
+                since = data[-1]["id"]
+                if len(data) < 100:
+                    break
+            except(Exception):
+                time.sleep(1)
+                continue
+        return ret
+
+    def get_pull_requests(self,project,state="all"):
+        return self.getResource("/api/v3/repos/{}/pulls?sort=created&state={}".format(project,state))
+
+    def get_tags(self,project):
+        return self.getResource("/api/v3/repos/{}/tags".format(project))
+
+    def get_releases(self,project):
+        return self.getResource("/api/v3/repos/{}/releases".format(project))

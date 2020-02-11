@@ -1,6 +1,7 @@
 .vscode/
 __pycache__/
 data/
+log/
 doc/
 env/
 infrastructure/

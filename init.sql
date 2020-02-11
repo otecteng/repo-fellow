@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS `commit`
   issue  VARCHAR(64)
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `commit_files`
+CREATE TABLE IF NOT EXISTS `commit_file`
 (
   iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
   id      VARCHAR(64),
@@ -40,3 +40,48 @@ CREATE TABLE IF NOT EXISTS `commit_files`
   changes  Integer
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `pull`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
+  oid     BIGINT,
+  project      VARCHAR(64),
+  created_at    DATETIME,
+  updated_at    DATETIME,
+  state  VARCHAR(64),
+  title  VARCHAR(512),
+  user  VARCHAR(64),
+  head  VARCHAR(64),
+  base  VARCHAR(64)
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `tag`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
+  oid     BIGINT,
+  project      VARCHAR(64),
+  created_at    DATETIME,
+  updated_at    DATETIME,
+  name  VARCHAR(64),
+  commit  VARCHAR(64)
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `release`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
+  oid     BIGINT,
+  project      VARCHAR(64),
+  created_at    DATETIME,
+  updated_at    DATETIME,
+  name  VARCHAR(64),
+  tag  VARCHAR(64),
+  author  VARCHAR(64)
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `developer`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
+  oid     BIGINT,
+  username      VARCHAR(64),
+  name  VARCHAR(64),
+  created_at    DATETIME
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

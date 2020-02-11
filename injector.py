@@ -3,8 +3,9 @@ import datetime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, String, Integer, Float, DateTime, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-
+import logging
 Base = declarative_base()
+
 class Project(Base):
     __tablename__ = 'project'
     path = Column(String(64),primary_key=True)
@@ -159,6 +160,68 @@ class Event:
         data["created_at"] = datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
         return Event(data)
 
+def safe_value(data,json_path,db_field):
+    if json_path in data and data[json_path]:
+        return data[json_path][:60]
+    return None
+
+class Developer(Base):
+    __tablename__ = 'developer'
+    iid = Column(Integer, primary_key=True)
+    oid = Column(Integer)
+    username = Column(String(64))
+    name = Column(String(64))
+    email = Column(String(64))
+    created_at = Column(DateTime)
+
+    @staticmethod
+    def from_github(data, obj = None):
+        ret = Developer()
+        if obj:
+            ret = obj
+        ret.oid,ret.username = data["id"],data["login"]
+        if "name" in data:
+            ret.name,ret.email,ret.created_at = data["name"],safe_value(data,"email",ret.email),datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
+        return ret
+
+    @staticmethod
+    def from_gitlab(data):
+        ret = Developer()
+        ret.oid,ret.username,ret.username = data["id"],data["username"],data["name"]
+        return ret
+        
+class Pull(Base):
+    __tablename__ = 'pull'
+    iid = Column(Integer, primary_key=True)
+    oid = Column(Integer)
+    project = Column(String(64))
+    state = Column(String(64))
+    title = Column(String(512))
+    user = Column(String(64))
+    head = Column(String(512))
+    base = Column(String(512))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+class Tag(Base):
+    __tablename__ = 'tag'
+    iid = Column(Integer, primary_key=True)
+    oid = Column(Integer)
+    project = Column(String(64))
+    created_at = Column(DateTime)
+    name = Column(String(64))
+    commit = Column(String(64))
+
+class Release(Base):
+    __tablename__ = 'release'
+    iid = Column(Integer, primary_key=True)
+    oid = Column(Integer)
+    project = Column(String(64))
+    created_at = Column(DateTime)
+    name = Column(String(64))
+    tag = Column(String(64))
+    author = Column(String(64))
+
 class Injector:
     def __init__(self,db_user = "repo", db_password = "", host = "localhost", database = "repo_fellow"):
         self.engine = create_engine("mysql+pymysql://{}:{}@{}:3306/{}?charset=utf8mb4".format(db_user,db_password,host,database))
@@ -175,6 +238,12 @@ class Injector:
             return self.db_session.query(Project).filter(Project.path >= start_from)
         else:
             return self.db_session.query(Project)
+
+    def get_users(self,start_from = None):
+        if start_from:
+            return self.db_session.query(Developer).filter(Developer.iid > start_from)
+        else:
+            return self.db_session.query(Developer)
 
     def get_project(self,path):
         return self.db_session.query(Project).get(path)
