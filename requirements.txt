@@ -34,7 +34,7 @@ docutils==0.16
 elasticsearch==7.0.4
 fake-useragent==0.1.10
 fasttext==0.8.3
-Flask==0.12.2
+Flask==1.0
 Flask-APScheduler==1.11.0
 Flask-BabelEx==0.9.3
 Flask-HTTPAuth==3.3.0
