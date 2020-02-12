@@ -15,5 +15,18 @@ class GitlabClient(CrawlerClient):
         return self.getResource("/api/v4/projects/{}/repository/commits?".format(path),limit = limit)
 
     def getCommit(self,project,commit):
-        return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
+        return self.getSingleResource("/api/v4/projects/{}/repository/commits/{}".format(project,commit))
+
+    def get_users(self,since = ""):
+        return self.getResource("/api/v4/users?")
+
+    def get_pull_requests(self,project,state = "all"):
+        return self.getResource("/api/v4/projects/{}/merge_requests?&state={}".format(project,state))
+
+    def get_tags(self,project):
+        return self.getResource("/api/v4/projects/{}/repository/tags?".format(project))
+
+    def get_releases(self,project):
+        return self.getResource("/api/v4/projects/{}/releases?".format(project))
+
 

@@ -18,12 +18,14 @@ class Site(Base):
 
 class Project(Base):
     __tablename__ = 'project'
-    path = Column(String(64),primary_key=True)
+    oid = Column(Integer)
+    path = Column(String(64),primary_key = True)
     owner = Column(String(64))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
     def __init__(self,data):
+        self.oid = data["id"]
         self.path = data["path_with_namespace"]
         self.created_at = datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
         self.updated_at = datetime.datetime.strptime(data["last_activity_at"][:19], "%Y-%m-%dT%H:%M:%S")
@@ -197,7 +199,7 @@ class Developer(Base):
     @staticmethod
     def from_gitlab(data):
         ret = Developer()
-        ret.oid,ret.username,ret.username = data["id"],data["username"],data["name"]
+        ret.oid,ret.username,ret.name = data["id"],data["username"],data["name"]
         return ret
         
 class Pull(Base):
