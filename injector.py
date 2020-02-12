@@ -245,9 +245,9 @@ class Injector:
             self.db_session.add(i)
         self.db_session.commit()
     
-    def get_projects(self,start_from = None):
-        if start_from:
-            return self.db_session.query(Project).filter(Project.path >= start_from)
+    def get_projects(self,since = None):
+        if since:
+            return self.db_session.query(Project).filter(Project.iid > since)
         else:
             return self.db_session.query(Project)
 

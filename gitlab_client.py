@@ -11,11 +11,14 @@ class GitlabClient(CrawlerClient):
     def getProjects(self,limit = None):
         return self.getResource("/api/v4/projects?",limit = limit)
 
-    def getProjectCommits(self,path,limit = None):
-        return self.getResource("/api/v4/projects/{}/repository/commits?".format(path),limit = limit)
+    def getProjectCommits(self,project,limit = None):
+        return self.getResource("/api/v4/projects/{}/repository/commits?".format(project),limit = limit)
 
     def getCommit(self,project,commit):
         return self.getSingleResource("/api/v4/projects/{}/repository/commits/{}".format(project,commit))
+
+    def get_commits(self,project,since = ""):
+        return self.getResource("/api/v4/projects/{}/repository/commits?since={}".format(project,since))
 
     def get_users(self,since = ""):
         return self.getResource("/api/v4/users?")
