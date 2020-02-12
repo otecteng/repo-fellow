@@ -18,8 +18,10 @@ class Site(Base):
 
 class Project(Base):
     __tablename__ = 'project'
+    iid = Column(Integer, primary_key=True)    
     oid = Column(Integer)
-    path = Column(String(64),primary_key = True)
+    site = Column(Integer)
+    path = Column(String(64))
     owner = Column(String(64))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
@@ -258,7 +260,7 @@ class Injector:
             return self.db_session.query(Developer)
 
     def get_project(self,path):
-        return self.db_session.query(Project).get(path)
+        return self.db_session.query(Project).filter(Project.path == path).first()
 
     def get_obj(self,type,iid):
         return self.db_session.query(Site).get(iid)

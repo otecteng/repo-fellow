@@ -51,11 +51,11 @@ class CrawlerClient:
         data = []
         while True:
             query = self.site + url + "&page={}&per_page={}".format(_page,_recordsPerPage)
-            print(query)
+            logging.info(query)
             try:
                 response = self.session.get(url = query, timeout = 20)
                 if response.status_code > 300:
-                    print("Error {} to open {}".format(response.status_code,query))
+                    logging.error("failed {} to open {}".format(response.status_code,query))
                     break
                 ret = response.json()
                 data = data + ret
@@ -65,9 +65,9 @@ class CrawlerClient:
                 if(len(ret) < _recordsPerPage):
                     break
             except(Exception):
-                print("[ERROR] read failed {}".format(query))
+                logging.error("[ERROR] read failed {}".format(query))
                 if retry:
-                    break
-                else:
                     continue
+                else:
+                    break
         return data

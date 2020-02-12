@@ -1,4 +1,5 @@
 import json
+import logging
 import time
 import organization
 import json
@@ -15,7 +16,11 @@ class GithubClient(CrawlerClient):
         return reponse.json()
     
     def getProjects(self,start_from = None,limit = None, last = None):
-        return self.getResource("/api/v3/user/repos?sort=created", start_from, limit ,  last)
+        return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
+
+    def get_projects(self,start_from = None,limit = None, last = None):
+        # /search/repositories?q="is:public"
+        return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
 
     def getAllProjectCommitsCount(self, owner, limit = None, since = None):
         query = '''

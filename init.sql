@@ -6,8 +6,11 @@ FLUSH PRIVILEGES;
 
 CREATE TABLE IF NOT EXISTS `project`
 (
-  path  VARCHAR(64) PRIMARY KEY,
-  owner  VARCHAR(512),
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,    
+  oid     BIGINT,
+  path      VARCHAR(64),
+  owner     VARCHAR(512),
+  site      Integer,
   created_at     DATETIME,
   updated_at     DATETIME
 );
