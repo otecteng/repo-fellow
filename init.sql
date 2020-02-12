@@ -85,3 +85,14 @@ CREATE TABLE IF NOT EXISTS `developer`
   name  VARCHAR(64),
   created_at    DATETIME
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `site`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
+  name  VARCHAR(64),
+  server_type  VARCHAR(64),  
+  url      VARCHAR(64),  
+  token  VARCHAR(64),
+  created_at    DATETIME
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+

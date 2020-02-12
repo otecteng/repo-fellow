@@ -6,6 +6,16 @@ from sqlalchemy.ext.declarative import declarative_base
 import logging
 Base = declarative_base()
 
+class Site(Base):
+    __tablename__ = 'site'
+    iid = Column(Integer, primary_key=True)    
+    name = Column(String(64))
+    server_type = Column(String(64))
+    url = Column(String(64))
+    token = Column(String(64))
+    created_at = Column(DateTime)
+
+
 class Project(Base):
     __tablename__ = 'project'
     path = Column(String(64),primary_key=True)
@@ -247,6 +257,9 @@ class Injector:
 
     def get_project(self,path):
         return self.db_session.query(Project).get(path)
+
+    def get_obj(self,type,iid):
+        return self.db_session.query(Site).get(iid)
 
     def get_commits(self,project = None):
         if project:
