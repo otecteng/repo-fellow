@@ -1,7 +1,4 @@
-import json
-import datetime
-from injector import Project,Commit,CommitFile,Event,Developer
-
+from repofellow.injector import Project,Commit,CommitFile,Event,Developer
 
 class Parser:
     @staticmethod

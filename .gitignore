@@ -1,8 +1,12 @@
 .vscode/
 __pycache__/
+build/
+dist/
+*.egg-info/
+repofollow/__pycache__/
 data/
 log/
 doc/
 env/
 infrastructure/
-infrastructure/
+

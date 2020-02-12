@@ -1,6 +1,4 @@
-import json
-import time
-import organization
+import repofellow.organization
 import requests
 from   requests_html import HTMLSession
 import logging
@@ -38,7 +36,7 @@ class CrawlerClient:
             values = list(map(lambda x:x[_last_field[0]][_last_field[1]][_last_field[2]],data))
         return last_value in values
         
-    def getResource(self,url,limit = None, page = None, recordsPerPage = None, last = None, retry = True):
+    def getResource(self,url,limit = None, page = None, recordsPerPage = None, last = None, retry = True, data_path = None):
         _page,_recordsPerPage = 1, 100
         _last_field = None
         if page is not None:
@@ -58,13 +56,16 @@ class CrawlerClient:
                     logging.error("failed {} to open {}".format(response.status_code,query))
                     break
                 ret = response.json()
+                if data_path:
+                    ret = ret[data_path]
                 data = data + ret
                 _page = _page + 1
                 if limit is not None and len(data) >= limit:
                     return data[:limit]
                 if(len(ret) < _recordsPerPage):
                     break
-            except(Exception):
+            except Exception as ex:
+                print(ex)
                 logging.error("[ERROR] read failed {}".format(query))
                 if retry:
                     continue

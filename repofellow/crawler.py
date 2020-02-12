@@ -1,5 +1,5 @@
-from github_client import GithubClient
-from gitlab_client import GitlabClient
+from repofellow.github_client import GithubClient
+from repofellow.gitlab_client import GitlabClient
 
 class Crawler:
     @staticmethod

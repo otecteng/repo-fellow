@@ -84,9 +84,9 @@ class Commit(Base):
 
     def __init__(self,data):
         self.id = data["id"]
-        self.message = data["message"].rstrip()
+        self.message = data["message"].rstrip()[:1000]
         self.author_name = data["author_name"]
-        self.author_email = data["author_email"]
+        self.author_email = data["author_email"][:64]
         self.created_at = data["authored_date"]
     
     @staticmethod
@@ -247,11 +247,13 @@ class Injector:
             self.db_session.add(i)
         self.db_session.commit()
     
-    def get_projects(self,since = None):
+    def get_projects(self,since = None, site = None):
+        print(site)
         if since:
             return self.db_session.query(Project).filter(Project.iid > since)
-        else:
-            return self.db_session.query(Project)
+        if site:
+            return self.db_session.query(Project).filter(Project.site == site)
+        return self.db_session.query(Project)
 
     def get_users(self,start_from = None):
         if start_from:

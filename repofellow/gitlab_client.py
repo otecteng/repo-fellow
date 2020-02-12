@@ -1,6 +1,6 @@
 import json
-import organization
-from crawler_client import CrawlerClient
+import repofellow.organization
+from repofellow.crawler_client import CrawlerClient
 import json
 
 class GitlabClient(CrawlerClient):

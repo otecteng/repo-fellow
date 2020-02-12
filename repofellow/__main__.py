@@ -19,14 +19,18 @@ Example:
     repo-fellow commit update project_x
 """
 import os
+import os, sys
+import json
+import time
 import datetime
 import logging
 from docopt import docopt
-from crawler import Crawler
-from injector import Injector,Commit
-from parser import Parser
-from repo_mysql import RepoMySQL
-if __name__ == '__main__':
+from repofellow.crawler import Crawler
+from repofellow.injector import Injector,Commit
+from repofellow.parser import Parser
+from repofellow.repo_mysql import RepoMySQL
+
+def main():
     logging.basicConfig(filename = "log/fellow.log", level = logging.INFO, format = "%(asctime)s %(message)s", filemode='a')
     logger = logging.getLogger()    
     
@@ -93,3 +97,6 @@ if __name__ == '__main__':
     if arguments["db"]:
         if command == "init":
             RepoMySQL().init_db(os.environ['DB_PASSWORD'])
+
+if __name__ == '__main__':
+    main()

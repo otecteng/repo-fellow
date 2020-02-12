@@ -1,9 +1,9 @@
 import json
-import logging
+
 import time
-import organization
+import repofellow.organization
 import json
-from crawler_client import CrawlerClient
+from repofellow.crawler_client import CrawlerClient
 
 class GithubClient(CrawlerClient):
     def __init__(self,site,token,data_path = "./data"):
@@ -18,9 +18,12 @@ class GithubClient(CrawlerClient):
     def getProjects(self,start_from = None,limit = None, last = None):
         return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
 
-    def get_projects(self,start_from = None,limit = None, last = None):
+    def get_projects(self, start_from = None,limit = None, last = None, public = False):
         # /search/repositories?q="is:public"
-        return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
+        if public:
+            return self.getResource("/api/v3/search/repositories?q=is:public", data_path = "items")
+        else:
+            return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
 
     def getAllProjectCommitsCount(self, owner, limit = None, since = None):
         query = '''
