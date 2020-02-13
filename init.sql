@@ -86,6 +86,8 @@ CREATE TABLE IF NOT EXISTS `developer`
   oid     BIGINT,
   username      VARCHAR(64),
   name  VARCHAR(64),
+  email  VARCHAR(64),
+  site      Integer,  
   created_at    DATETIME
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 

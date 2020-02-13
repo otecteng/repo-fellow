@@ -1,3 +1,4 @@
+import re
 import json
 import datetime
 from sqlalchemy.orm import sessionmaker
@@ -14,7 +15,8 @@ class Site(Base):
     url = Column(String(64))
     token = Column(String(64))
     created_at = Column(DateTime)
-
+    def __str__(self):
+        return "{}\t{}\t{}\t{}".format(self.iid,self.name,self.server_type,self.url)
 
 class Project(Base):
     __tablename__ = 'project'
@@ -121,13 +123,15 @@ class Commit(Base):
         return Commit(content)
 
     @staticmethod
-    def from_gitlab(data):
+    def from_gitlab(data,project = project):
         # sample: authored_date: 2019-11-24T23:22:06.000+08:00
         data["authored_date"] = datetime.datetime.strptime(data["authored_date"][:19], "%Y-%m-%dT%H:%M:%S")
-        return Commit(data)
+        ret = Commit(data)
+        ret.project = project
+        return ret
 
     @staticmethod
-    def from_github(data):
+    def from_github(data,project = project):
         # path : commit/commiter
         data["commit"]["committer"]["date"] = datetime.datetime.strptime(data["commit"]["committer"]["date"][:19], "%Y-%m-%dT%H:%M:%S")
         author = data["commit"]["committer"]
@@ -137,6 +141,7 @@ class Commit(Base):
         }
         ret = Commit(content)
         ret.issue = Commit.find_issue(content["message"])
+        ret.project = project
         return ret
 
     @staticmethod
@@ -247,8 +252,9 @@ class Injector:
             self.db_session.add(i)
         self.db_session.commit()
     
-    def get_projects(self,since = None, site = None):
-        print(site)
+    def get_projects(self,since = None, site = None, ids = None):
+        if ids:
+            return list(map(lambda x:self.db_session.query(Project).get(x),ids))
         if since:
             return self.db_session.query(Project).filter(Project.iid > since)
         if site:
@@ -265,7 +271,7 @@ class Injector:
         return self.db_session.query(Project).filter(Project.path == path).first()
 
     def get_obj(self,type,iid):
-        return self.db_session.query(Site).get(iid)
+        return self.db_session.query(type).get(iid)
 
     def get_commits(self,project = None):
         if project:
@@ -278,3 +284,15 @@ class Injector:
 
     def db_commit(self):
         self.db_session.commit()
+
+    def add_site(self,site_url):
+        # http://user:password@url?name&type
+        args = re.split(":|#|@|\?|&",site_url)
+        site = Site()
+        site.name,site.user,site.token,site.url,site.server_type = args[4],args[1][2:-1],args[2],"{}://{}".format(args[0],args[3]),args[5]
+        self.db_session.add(site)
+        self.db_session.commit()
+        logging.info("server added, iid = {}".format(self.db_session.query(Site).filter(Site.name == site.name).first().iid))
+
+    def get_sites(self):
+        return self.db_session.query(Site)

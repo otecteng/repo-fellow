@@ -2,13 +2,13 @@ from repofellow.injector import Project,Commit,CommitFile,Event,Developer
 
 class Parser:
     @staticmethod
-    def parse_commits(data,format="github"):
+    def parse_commits(data,format="github", project = None):
         if format == "gitee":
             return list(map(lambda x:Commit.from_gitee(x),data))
         elif format == "gitlab":
-            return list(map(lambda x:Commit.from_gitlab(x),data))
+            return list(map(lambda x:Commit.from_gitlab(x,project = project),data))
         else:
-            return list(map(lambda x:Commit.from_github(x),data))
+            return list(map(lambda x:Commit.from_github(x,project = project),data))
 
     @staticmethod
     def parse_events(data,format="github"):

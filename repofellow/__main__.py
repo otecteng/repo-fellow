@@ -7,11 +7,13 @@ Usage:
     repo-fellow event <command> [<args>]
     repo-fellow db <command> [<args>]
     repo-fellow pr <command> [<args>]
+    repo-fellow site <command> [<args>]
 
 Options: 
     -h,--help        
 
 Example:
+    repo-fellow site add https://user:password@site?name&type
     repo-fellow projects remote owner
     repo-fellow projects list
     repo-fellow projects import
@@ -19,16 +21,24 @@ Example:
     repo-fellow commit update project_x
 """
 import os
-import os, sys
+import sys
+import re
 import json
 import time
 import datetime
 import logging
 from docopt import docopt
 from repofellow.crawler import Crawler
-from repofellow.injector import Injector,Commit
+from repofellow.injector import Injector,Commit,Site
 from repofellow.parser import Parser
 from repofellow.repo_mysql import RepoMySQL
+
+def get_arg(key,default_value = None, args = None):
+    if key in os.environ:
+        return os.environ[key]
+    if args and key in args:
+        return args[key]
+    return default_value
 
 def main():
     logging.basicConfig(filename = "log/fellow.log", level = logging.INFO, format = "%(asctime)s %(message)s", filemode='a')
@@ -39,20 +49,25 @@ def main():
     logger.addHandler(ch)
 
     arguments = docopt(__doc__, version = 'Repo Fellow')
-    server, site, token = os.environ['GIT_SERVER'], os.environ['GIT_SITE'], os.environ['GIT_TOKEN']
-    db_user, db_password, db = os.environ['FELLOW_USER'] or "repo", os.environ['FELLOW_PASSWORD'] or "fellow", os.environ['FELLOW_DB'] or "repo_fellow"
     command = arguments["<command>"]
+
+    db_user, db_password, db = get_arg("FELLOW_USER","repo"), get_arg("FELLOW_PASSWORD","fellow"), get_arg("FELLOW_DB","repo_fellow")
+
     injector = Injector(db_user = db_user, db_password = db_password,database = db)
+    site = Site()
+    site.server_type,site.url,site.token = get_arg("GIT_SERVER"), get_arg("GIT_SITE"), get_arg("GIT_TOKEN")
     if arguments["project"]:
         if command == "list":
             for i in injector.get_projects():
                 logging.info(i)
         if command == "import":
-            data = Crawler.create_client(server,site,token).getProjects()
-            injector.insert_data(Parser.parse_projects(data))
+            site = injector.get_obj(Site,arguments["<args>"])
+            injector = Injector(db_user = db_user, db_password = db_password,database = db)
+            data = Crawler(site,injector).import_projects()
             logging.info("total imported projects {}".format(len(data)))
+
         if command == "remote":
-            commits = Crawler.create_client(server,site,token).getAllProjectCommitsCount(arguments["<args>"])
+            commits = Crawler.create_client(site).getAllProjectCommitsCount(arguments["<args>"])
             for i in commits:
                 if i["ref"]:
                     logging.info("{}:{}".format(i["name"],i["ref"]["target"]["history"]["totalCount"]))
@@ -61,42 +76,37 @@ def main():
 
     if arguments["user"]:
         if command == "import":
-            data = Crawler.create_client(server,site,token).get_users()
-            injector.insert_data(Parser.parse_users(data))
+            site = injector.get_obj(Site,arguments["<args>"])
+            data = Crawler.create_client(site).get_users()
+            injector.insert_data(Parser.parse_users(data,site.server_type))
             logging.info("total imported users {}".format(len(data)))
 
     if arguments["pr"]:
         if command == "import":
             project = arguments["<args>"]
-            data = Crawler.create_client(server,site,token).get_pull_requests(project)
+            data = Crawler.create_client(site).get_pull_requests(project)
             injector.insert_data(Parser.parse_pulls(data))
             logging.info("total imported pulls {}".format(len(data)))
 
     if arguments["commit"]:
         if command == "update":
+            site_id, projects = arguments["<args>"].split(":")
+            site = injector.get_obj(Site,site_id)
+            logging.info("importing from {} of projects {} ".format(site.name,projects))
             injector = Injector(db_user = db_user, db_password = db_password,database = db)
-            if arguments["<args>"]:
-                projects = [injector.get_project(arguments["<args>"])]
-            else:
-                projects = injector.get_projects()
-            for i in projects:
-                project = i.path
-                logging.info("update project commits:{}".format(project))
-                crawler = Crawler.create_client(server,site,token)
-                commit = injector.get_project_last_commit(project)
-                if commit is not None:
-                    commits = crawler.getProjectCommits(project, since = commit.created_at + datetime.timedelta(seconds=1))
-                else:
-                    commits = crawler.getProjectCommits(project)
-                logging.info("{} new commit number {}".format(project,len(commits)))
-                new_commits = Parser.parse_commits(commits,format="github")
-                for j in new_commits:
-                    j.project = project
-                Injector(db_user = db_user, db_password = db_password,database = db).insert_data(new_commits)
+            Crawler(site,injector).import_commits(projects)
                 
     if arguments["db"]:
         if command == "init":
-            RepoMySQL().init_db(os.environ['DB_PASSWORD'])
+            if arguments["<args>"]:
+                db_user, db_password, db_host = re.split(":|@",arguments["<args>"])
+            RepoMySQL().init_db(host = db_host, root_password = db_password)
 
+    if arguments["site"]:
+        if command == "add":
+            Injector(db_user = db_user, db_password = db_password,database = db).add_site(arguments["<args>"])
+        if command == "list":
+            for i in Injector(db_user = db_user, db_password = db_password,database = db).get_sites(): logging.info(i)
+                
 if __name__ == '__main__':
     main()

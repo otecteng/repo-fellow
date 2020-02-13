@@ -66,8 +66,8 @@ class GithubClient(CrawlerClient):
                 break
         return ret
 
-    def getProjectCommits(self, path, limit = None, since = None):
-        owner,name = path.split("/")
+    def getProjectCommits(self, project, limit = None, since = None):
+        owner,name = project.path.split("/")
         if since:
             return self.getResource("/api/v3/repos/{}/{}/commits?since={}".format(owner,name,since.strftime("%Y-%m-%dT%H:%M:%SZ")),limit = limit)
         else:
