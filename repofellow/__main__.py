@@ -13,6 +13,7 @@ Options:
     -h,--help        
 
 Example:
+    repo-fellow db init root:xxx@localhost
     repo-fellow site add https://user:password@site?name&type
     repo-fellow projects remote owner
     repo-fellow projects list
