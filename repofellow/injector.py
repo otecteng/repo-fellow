@@ -71,7 +71,9 @@ class Project(Base):
     def from_github(data,ret = None):
         if ret is None:
             ret = Project()
-
+        if len(data) == 0:
+            logging.warning("empty data, project {}".format(ret.iid))
+            return ret
         Convertor.json2db(data,ret,"id","oid")
         Convertor.json2db(data,ret,"full_name","path")
         Convertor.json2db(data,ret,"updated_at")
@@ -80,7 +82,8 @@ class Project(Base):
         Convertor.json2db(data,ret,"pushed_at")
         Convertor.json2db(data,ret,"language")
         Convertor.json2db(data,ret,"size")
-        ret.owner = data["owner"]["login"]
+        if "owner" in data and data["owner"]:
+            ret.owner = data["owner"]["login"]
         return ret
 
     @staticmethod

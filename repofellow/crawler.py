@@ -30,11 +30,11 @@ class Crawler:
 
     #using get detail api    
     def update_projects(self):
-        projects = list(self.injector.get_projects())
-        per_page = 10
+        projects = list(self.injector.get_projects(site = self.site.iid))
+        per_page = 100
         pages = len(projects)/per_page + len(projects) % per_page
         page, data = 1,{}
-        while page < 100:
+        while page < pages:
             g = [gevent.spawn(self.get_project, i) for i in projects[per_page * (page-1):per_page * page]]
             gevent.joinall(g)
             for _,r in enumerate(g):

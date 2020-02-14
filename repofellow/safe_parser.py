@@ -1,6 +1,6 @@
 from sqlalchemy.orm.attributes  import InstrumentedAttribute
 from sqlalchemy import inspect
-from sqlalchemy.sql.sqltypes import DateTime,String
+from sqlalchemy.sql.sqltypes import DateTime,String,Integer
 import datetime
 import logging
 
@@ -20,7 +20,7 @@ class Convertor:
     @classmethod
     def json2db(cls,data,obj,key,field = None):
         if key not in data or data[key] is None:
-            logging.info("{} not exist in data".format(key))
+            # logging.info("{} not exist in data".format(key))
             return
         if type(obj) in cls.mapping:
             fields = cls.mapping[type(obj)]
@@ -40,3 +40,5 @@ class Convertor:
             setattr(obj,field,datetime.datetime.strptime(data[key][:19], "%Y-%m-%dT%H:%M:%S"))
         if isinstance(field_type,String):
             setattr(obj,field,data[key][:field_type.length])
+        if isinstance(field_type,Integer):
+            setattr(obj,field,data[key])
