@@ -1,4 +1,4 @@
-from repofellow.injector import Project,Commit,CommitFile,Event,Developer
+from repofellow.injector import Project,Commit,CommitFile,Event,Developer,Group
 
 class Parser:
     @staticmethod
@@ -37,3 +37,11 @@ class Parser:
         else:
             return list(map(lambda x:Developer.from_github(x),data))
 
+    @staticmethod
+    def parse_groups(data,format="github"):
+        if format == "gitee":
+            return list(map(Group.from_gitee,data))
+        elif format == "gitlab":
+            return list(map(Group.from_gitlab,data))
+        else:
+            return list(map(Group.from_github,data))

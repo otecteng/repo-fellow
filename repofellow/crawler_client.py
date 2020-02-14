@@ -1,7 +1,8 @@
-import repofellow.organization
+import time
 import requests
 from   requests_html import HTMLSession
 import logging
+import repofellow.organization
 
 class CrawlerClient:
     def __init__(self,site,token,data_path = "./data"):
@@ -17,27 +18,27 @@ class CrawlerClient:
             try:
                 response = self.session.get(url = query, timeout = 20)
                 if response.status_code > 300:
-                    print("Error {} to open {}".format(response.status_code,query))
+                    logging.info("Error {} to open {}".format(response.status_code,query))
                 break
             except Exception as ex:
-                print(ex)
+                # print(ex)
                 logging.info("retry {}".format(query))
                 time.sleep(1)                
                 continue
         return response.json()
 
     def check_last_value(self, data, last_field = None, last_value = None):
-        if _last_field is None:
+        if last_value is None:
             return False
         values = []
-        if len(_last_field) == 1:
-            values = list(map(lambda x:x[_last_field[0]],data))
-        if len(_last_field) == 3:
-            values = list(map(lambda x:x[_last_field[0]][_last_field[1]][_last_field[2]],data))
+        if len(last_value) == 1:
+            values = list(map(lambda x:x[last_value[0]],data))
+        if len(last_value) == 3:
+            values = list(map(lambda x:x[last_value[0]][last_value[1]][last_value[2]],data))
         return last_value in values
         
     def getResource(self,url,limit = None, page = None, recordsPerPage = None, last = None, retry = True, data_path = None):
-        _page,_recordsPerPage = 1, 100
+        _page,_recordsPerPage = 1, 20
         _last_field = None
         if page is not None:
             _page = page
@@ -51,7 +52,7 @@ class CrawlerClient:
             query = self.site + url + "&page={}&per_page={}".format(_page,_recordsPerPage)
             logging.info(query)
             try:
-                response = self.session.get(url = query, timeout = 20)
+                response = self.session.get(url = query, timeout = 60)
                 if response.status_code > 300:
                     logging.error("failed {} to open {}".format(response.status_code,query))
                     break

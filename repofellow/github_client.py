@@ -1,5 +1,5 @@
 import json
-
+import logging
 import time
 import repofellow.organization
 import json
@@ -18,12 +18,14 @@ class GithubClient(CrawlerClient):
     def getProjects(self,start_from = None,limit = None, last = None):
         return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
 
-    def get_projects(self, start_from = None,limit = None, last = None, public = False):
+    def get_projects(self, start_from = None,limit = None, last = None, public = False, viewer = True):
         # /search/repositories?q="is:public"
         if public:
             return self.getResource("/api/v3/search/repositories?q=is:public", data_path = "items")
-        else:
+        if viewer:
             return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
+        else:
+            return self.get_all_repos()
 
     def getAllProjectCommitsCount(self, owner, limit = None, since = None):
         query = '''
@@ -93,6 +95,23 @@ class GithubClient(CrawlerClient):
                 continue
         return ret
 
+    def get_all_repos(self,since = "0"):
+        ret = []
+        while True:
+            try:
+                data = self.getSingleResource("/api/v3/repositories?since={}&per_page=100".format(since))
+                ret = ret + data
+                since = data[-1]["id"]
+                if len(data) < 100:
+                    break
+            except(Exception):
+                time.sleep(1)
+                continue
+        return ret
+
+    def get_project(self,project):
+        return self.getSingleResource("/api/v3/repositories/{}".format(project.oid))
+
     def get_pull_requests(self,project,state="all"):
         return self.getResource("/api/v3/repos/{}/pulls?sort=created&state={}".format(project,state))
 
@@ -101,3 +120,101 @@ class GithubClient(CrawlerClient):
 
     def get_releases(self,project):
         return self.getResource("/api/v3/repos/{}/releases".format(project))
+
+    def get_groups(self):
+        query = '''
+{
+  search(query: "type:org", type: USER,first: $recordsPerPage, $after) {
+    userCount
+    pageInfo {
+        endCursor
+        startCursor
+    }     
+    edges {
+      node {
+        ... on Organization {
+          name
+          location
+          description
+          repositories(first: 1){
+            totalCount
+          }
+        }
+      }
+    }
+  }
+}
+'''
+        ret = []
+        page , recordsPerPage , endCursor = 1, "100", None
+        while True:
+            if endCursor:
+                gq_query = query.replace("$recordsPerPage",recordsPerPage).replace("$after","after:\"{}\"".format(endCursor))
+            else:
+                gq_query = query.replace("$recordsPerPage",recordsPerPage).replace("$after","")
+            data = self.gqResource(gq_query)
+            if "errors" in data:
+                logging.error(data["errors"])
+                break
+            totalCount = data["data"]["search"]["userCount"]
+            endCursor = data["data"]["search"]["pageInfo"]["endCursor"]
+            ret = ret + list(map(lambda x: x["node"],data["data"]["search"]["edges"]))
+            if len(ret) == totalCount:
+                break
+        return ret
+
+    def get_users_gq(self):
+        query = '''
+{
+  search(query: "type:user", type: USER,first: $recordsPerPage, $after) {
+    userCount
+    pageInfo {
+        endCursor
+        startCursor
+    }     
+    edges {
+      node {
+        ... on User {
+          login
+          name
+          location
+          email
+          repositories(first: 1){
+            totalCount
+          }
+        }
+      }
+    }
+  }
+}
+'''
+        ret = []
+        page , recordsPerPage , endCursor = 1, "100", None
+        while True:
+            logging.info("reading page {} perpage {}".format(page,recordsPerPage))
+            if endCursor:
+                gq_query = query.replace("$recordsPerPage",recordsPerPage).replace("$after","after:\"{}\"".format(endCursor))
+            else:
+                gq_query = query.replace("$recordsPerPage",recordsPerPage).replace("$after","")
+            data = self.gqResource(gq_query)
+            if "errors" in data:
+                logging.error(data["errors"])
+                break
+            result = list(map(lambda x: x["node"],data["data"]["search"]["edges"]))
+            if len(result) == 0:
+                logging.info(gq_query)
+                logging.info(data)
+                time.sleep(1)
+                break
+
+            totalCount = data["data"]["search"]["userCount"]
+            endCursor = data["data"]["search"]["pageInfo"]["endCursor"]
+            
+            logging.info("result count {}".format(len(result)))
+            ret = ret + result
+            logging.info("totalCount {} data lenth count {}".format(totalCount,len(ret)))
+            if len(ret) == totalCount:
+                break
+            page = page + 1
+        return ret
+

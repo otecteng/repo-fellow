@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `project`
   path      VARCHAR(64),
   owner     VARCHAR(512),
   site      Integer,
+  description VARCHAR(512),
   created_at     DATETIME,
   updated_at     DATETIME
 );
@@ -86,8 +87,22 @@ CREATE TABLE IF NOT EXISTS `developer`
   oid     BIGINT,
   username      VARCHAR(64),
   name  VARCHAR(64),
+  location  VARCHAR(64),
   email  VARCHAR(64),
+  repo_count      Integer,
   site      Integer,  
+  created_at    DATETIME
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `developer_group`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
+  oid     BIGINT,
+  site    BIGINT,
+  name  VARCHAR(64),
+  location  VARCHAR(64),
+  description VARCHAR(256),
+  repo_count      Integer,
   created_at    DATETIME
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 

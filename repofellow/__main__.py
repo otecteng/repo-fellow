@@ -8,6 +8,7 @@ Usage:
     repo-fellow db <command> [<args>]
     repo-fellow pr <command> [<args>]
     repo-fellow site <command> [<args>]
+    repo-fellow group <command> [<args>]
 
 Options: 
     -h,--help        
@@ -17,9 +18,9 @@ Example:
     repo-fellow site add https://user:password@site?name&type
     repo-fellow projects remote owner
     repo-fellow projects list
-    repo-fellow projects import
+    repo-fellow projects import site_id
     repo-fellow commit update *
-    repo-fellow commit update project_x
+    repo-fellow commit update project
 """
 import os
 import sys
@@ -66,20 +67,24 @@ def main():
             injector = Injector(db_user = db_user, db_password = db_password,database = db)
             data = Crawler(site,injector).import_projects()
             logging.info("total imported projects {}".format(len(data)))
-
         if command == "remote":
-            commits = Crawler.create_client(site).getAllProjectCommitsCount(arguments["<args>"])
+            site = injector.get_obj(Site,arguments["<args>"])
+            commits = Crawler.create_client(site).getAllProjectCommitsCount("china")
             for i in commits:
                 if i["ref"]:
                     logging.info("{}:{}".format(i["name"],i["ref"]["target"]["history"]["totalCount"]))
                 else:
                     logging.error("{} has none history record".format(i["name"]))
+        if command == "update":
+            site = injector.get_obj(Site,arguments["<args>"])
+            injector = Injector(db_user = db_user, db_password = db_password,database = db)
+            data = Crawler(site,injector).update_projects()
+
 
     if arguments["user"]:
         if command == "import":
             site = injector.get_obj(Site,arguments["<args>"])
-            data = Crawler.create_client(site).get_users()
-            injector.insert_data(Parser.parse_users(data,site.server_type))
+            data = Crawler(site,injector).import_users()
             logging.info("total imported users {}".format(len(data)))
 
     if arguments["pr"]:
@@ -109,5 +114,12 @@ def main():
         if command == "list":
             for i in Injector(db_user = db_user, db_password = db_password,database = db).get_sites(): logging.info(i)
                 
+    if arguments["group"]:
+        if command == "import":
+            site = injector.get_obj(Site,arguments["<args>"])
+            data = Crawler.create_client(site).get_groups()
+            injector.insert_data(Parser.parse_groups(data,site.server_type))
+            logging.info("total imported groups {}".format(len(data)))
+
 if __name__ == '__main__':
     main()

@@ -5,6 +5,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, String, Integer, Float, DateTime, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 import logging
+from repofellow.safe_parser import Convertor
+
 Base = declarative_base()
 
 class Site(Base):
@@ -16,7 +18,29 @@ class Site(Base):
     token = Column(String(64))
     created_at = Column(DateTime)
     def __str__(self):
-        return "{}\t{}\t{}\t{}".format(self.iid,self.name,self.server_type,self.url)
+        return "{}\t{}\t{}\t{}\t{}".format(self.iid,self.name,self.server_type,self.url,self.created_at)
+
+class Group(Base):
+    __tablename__ = 'developer_group'
+    iid = Column(Integer, primary_key=True)    
+    name = Column(String(64))
+    oid = Column(Integer)
+    site = Column(Integer)
+    location = Column(String(64))
+    repo_count = Column(Integer)
+    created_at = Column(DateTime)
+    def __str__(self):
+        return "{}\t{}\t{}\t{}".format(self.iid,self.name,self.repo_count,self.location)
+
+    @staticmethod
+    def from_github(data):
+        ret = Group()
+        ret.name = data["name"]
+        ret.location = data["location"]
+        ret.description = data["description"]
+        if data["repositories"]:
+            ret.repo_count = data["repositories"]["totalCount"]
+        return ret
 
 class Project(Base):
     __tablename__ = 'project'
@@ -24,27 +48,40 @@ class Project(Base):
     oid = Column(Integer)
     site = Column(Integer)
     path = Column(String(64))
+    description = Column(String(512))
     owner = Column(String(64))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-
-    def __init__(self,data):
-        self.oid = data["id"]
-        self.path = data["path_with_namespace"]
-        self.created_at = datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
-        self.updated_at = datetime.datetime.strptime(data["last_activity_at"][:19], "%Y-%m-%dT%H:%M:%S")
-        self.owner = data["owner"]["username"]
+    pushed_at = Column(DateTime)
+    language = Column(String(64))
+    size = Column(Integer)
+    
+    def __init__(self,data = None):
+        if data:
+            self.oid = data["id"]
+            self.path = data["path_with_namespace"]
+            self.created_at = datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
+            self.updated_at = datetime.datetime.strptime(data["last_activity_at"][:19], "%Y-%m-%dT%H:%M:%S")
+            self.owner = data["owner"]["username"]
 
     def __str__(self):
         return "{}\t{}\t{}".format(self.path,self.created_at,self.updated_at)
 
     @staticmethod
-    def from_github(data):
-        # data["commit"]["author"]["date"] = datetime.datetime.strptime(data["commit"]["author"]["date"][:19], "%Y-%m-%dT%H:%M:%S")
-        data["path_with_namespace"] = data["full_name"]
-        data["last_activity_at"] = data["updated_at"]
-        data["owner"]["username"] = data["owner"]["login"]
-        return Project(data)
+    def from_github(data,ret = None):
+        if ret is None:
+            ret = Project()
+
+        Convertor.json2db(data,ret,"id","oid")
+        Convertor.json2db(data,ret,"full_name","path")
+        Convertor.json2db(data,ret,"updated_at")
+        Convertor.json2db(data,ret,"created_at")
+        Convertor.json2db(data,ret,"description")
+        Convertor.json2db(data,ret,"pushed_at")
+        Convertor.json2db(data,ret,"language")
+        Convertor.json2db(data,ret,"size")
+        ret.owner = data["owner"]["login"]
+        return ret
 
     @staticmethod
     def from_gitlab(data):
@@ -109,7 +146,7 @@ class Commit(Base):
         pos = issue.find('：')
         if pos > 1 :
             issue = issue[0:pos]
-        return issue
+        return issue[:64]
 
     def __str__(self):
         return "{}[{}]:{}".format(self.created_at,self.author_email,self.message)
@@ -188,9 +225,11 @@ class Developer(Base):
     __tablename__ = 'developer'
     iid = Column(Integer, primary_key=True)
     oid = Column(Integer)
+    site = Column(Integer)
     username = Column(String(64))
     name = Column(String(64))
     email = Column(String(64))
+    repo_count = Column(Integer)
     created_at = Column(DateTime)
 
     @staticmethod
@@ -198,9 +237,16 @@ class Developer(Base):
         ret = Developer()
         if obj:
             ret = obj
-        ret.oid,ret.username = data["id"],data["login"]
-        if "name" in data:
-            ret.name,ret.email,ret.created_at = data["name"],safe_value(data,"email",ret.email),datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
+        if "repositories" in data:
+            ret.username = data["login"]
+            ret.name = data["name"]
+            ret.location = data["location"]
+            if data["repositories"]:
+                ret.repo_count = data["repositories"]["totalCount"]
+        else:
+            ret.oid,ret.username = data["id"],data["login"]
+            if "name" in data:
+                ret.name,ret.email,ret.created_at = data["name"],safe_value(data,"email",ret.email),datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
         return ret
 
     @staticmethod
@@ -246,6 +292,7 @@ class Injector:
         self.engine = create_engine("mysql+pymysql://{}:{}@{}:3306/{}?charset=utf8mb4".format(db_user,db_password,host,database))
         DBSession = sessionmaker(bind = self.engine)
         self.db_session = DBSession()
+        Convertor.load_schema(Project())
     
     def insert_data(self,data):
         for i in data:
