@@ -7,6 +7,7 @@ from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
 from repofellow.injector import Project
+from repofellow.decorator import log_time
 
 class Crawler:
     def __init__(self,site,injector = None):
@@ -14,8 +15,24 @@ class Crawler:
         self.client = Crawler.create_client(site)
         self.injector = injector
 
+    def page_objects(self, objects, per_page ):
+        pages, m = divmod(len(objects), per_page)
+        if m > 0: pages = pages + 1
+        ret = []
+        for i in range(pages):
+           ret.append(objects[i * per_page:(i+1)*per_page])
+        return ret
+    
+    def execute_parallel(self,func,objects):
+        ret = {}
+        g = [gevent.spawn(func, i) for i in objects]
+        gevent.joinall(g)
+        for _,r in enumerate(g):
+            ret[r.value[0]] = r.value[1]
+        return ret
+
     def import_projects(self,private = False):
-        data = self.client.get_projects(private= private)
+        data = self.client.get_projects(private = private)
         projects = Parser.parse_projects(data,self.site.server_type)
         for i in projects:
             i.site = self.site.iid
@@ -25,22 +42,12 @@ class Crawler:
     def get_project(self,project):
         return (project,self.client.get_project(project))
 
-    #using get detail api    
+    @log_time
     def update_projects(self,since = None):
-        projects = list(self.injector.get_projects(site = self.site.iid, since = since))
-        per_page = 100
-        pages = len(projects)/per_page + len(projects) % per_page
-        page, data = 1,{}
-        while page < pages:
-            g = [gevent.spawn(self.get_project, i) for i in projects[per_page * (page-1):per_page * page]]
-            gevent.joinall(g)
-            for _,r in enumerate(g):
-                data[r.value[0]] = r.value[1]
-            page = page + 1
-        
-        if self.site.server_type == "github":
-            for i in data.keys():
-                Project.from_github(data[i],i)
+        projects_all = list(self.injector.get_projects(site = self.site.iid, since = since))
+        for projects in self.page_objects(projects_all,100):
+            data = self.execute_parallel(self.get_project,projects)
+            [Project.from_github(data[i],i) for i in data]    
         self.injector.db_commit()
 
     def import_commits(self,projects = None):
