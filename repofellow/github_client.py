@@ -18,14 +18,12 @@ class GithubClient(CrawlerClient):
     def getProjects(self,start_from = None,limit = None, last = None):
         return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
 
-    def get_projects(self, start_from = None,limit = None, last = None, public = False, viewer = True):
-        # /search/repositories?q="is:public"
-        if public:
-            return self.getResource("/api/v3/search/repositories?q=is:public", data_path = "items")
-        if viewer:
-            return self.getResource("/api/v3/user/repos?sort=created", start_from, limit, last)
+    def get_projects(self, start_from = None, private = False):
+        if private:
+            return self.getResource("/api/v3/user/repos?visibility=private&sort=created", start_from)
         else:
             return self.get_all_repos()
+            
 
     def getAllProjectCommitsCount(self, owner, limit = None, since = None):
         query = '''

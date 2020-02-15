@@ -14,11 +14,8 @@ class Crawler:
         self.client = Crawler.create_client(site)
         self.injector = injector
 
-    def import_projects(self):
-        if self.site.server_type == "github":
-            data = self.client.get_projects( viewer= False )
-        else:
-            data = self.client.get_projects()
+    def import_projects(self,private = False):
+        data = self.client.get_projects(private= private)
         projects = Parser.parse_projects(data,self.site.server_type)
         for i in projects:
             i.site = self.site.iid
@@ -29,8 +26,8 @@ class Crawler:
         return (project,self.client.get_project(project))
 
     #using get detail api    
-    def update_projects(self):
-        projects = list(self.injector.get_projects(site = self.site.iid))
+    def update_projects(self,since = None):
+        projects = list(self.injector.get_projects(site = self.site.iid, since = since))
         per_page = 100
         pages = len(projects)/per_page + len(projects) % per_page
         page, data = 1,{}

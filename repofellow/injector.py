@@ -305,8 +305,8 @@ class Injector:
     def get_projects(self,since = None, site = None, ids = None):
         if ids:
             return list(map(lambda x:self.db_session.query(Project).get(x),ids))
-        if since:
-            return self.db_session.query(Project).filter(Project.iid > since)
+        if since and site:
+            return self.db_session.query(Project).filter(Project.site == site).filter(Project.iid > since)
         if site:
             return self.db_session.query(Project).filter(Project.site == site)
         return self.db_session.query(Project)

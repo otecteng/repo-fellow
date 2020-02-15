@@ -1,17 +1,20 @@
 """repo crawler via command-line.
 
 Usage:
-    repo-fellow project <command> [<args>]
-    repo-fellow user <command> [<args>]
-    repo-fellow commit <command> [<args>]
-    repo-fellow event <command> [<args>]
     repo-fellow db <command> [<args>]
-    repo-fellow pr <command> [<args>]
     repo-fellow site <command> [<args>]
-    repo-fellow group <command> [<args>]
+    repo-fellow project <command> [--site=<id>] [--since=<id>] [--private] [<args>]
+    repo-fellow user <command> [--site=<id>] [<args>]
+    repo-fellow commit <command> [--site=<id>] [<args>]
+    repo-fellow event <command> [--site=<id>] [<args>]
+    repo-fellow pr <command> [--site=<id>] [<args>]
+    repo-fellow group <command> [--site=<id>] [<args>]
 
 Options: 
-    -h,--help        
+    -h,--help 
+    --site=<id>   repo site id
+    --since=<id>  since object id
+    --private     processing private projects
 
 Example:
     repo-fellow db init root:xxx@localhost
@@ -63,9 +66,9 @@ def main():
             for i in injector.get_projects():
                 logging.info(i)
         if command == "import":
-            site = injector.get_obj(Site,arguments["<args>"])
+            site = injector.get_obj(Site,arguments["--site"])
             injector = Injector(db_user = db_user, db_password = db_password,database = db)
-            data = Crawler(site,injector).import_projects()
+            data = Crawler(site,injector).import_projects(arguments["--private"])
             logging.info("total imported projects {}".format(len(data)))
         if command == "remote":
             site = injector.get_obj(Site,arguments["<args>"])
@@ -76,9 +79,9 @@ def main():
                 else:
                     logging.error("{} has none history record".format(i["name"]))
         if command == "update":
-            site = injector.get_obj(Site,arguments["<args>"])
+            site = injector.get_obj(Site,arguments["--site"])
             injector = Injector(db_user = db_user, db_password = db_password,database = db)
-            data = Crawler(site,injector).update_projects()
+            data = Crawler(site,injector).update_projects(arguments["--since"])
 
 
     if arguments["user"]:
