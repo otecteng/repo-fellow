@@ -6,7 +6,7 @@ import gevent
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
-from repofellow.injector import Project
+from repofellow.injector import Project,Developer
 from repofellow.decorator import log_time
 
 class Crawler:
@@ -50,6 +50,17 @@ class Crawler:
             [Project.from_github(data[i],i) for i in data]    
         self.injector.db_commit()
 
+    def get_project_statistic(self,project):
+        return (project,self.client.get_project_statistic(project))
+
+    @log_time
+    def statistic_projects(self,since = None):
+        projects_all = list(self.injector.get_projects(site = self.site.iid, since = since))
+        for projects in self.page_objects(projects_all,100):
+            data = self.execute_parallel(self.get_project_statistic,projects)
+            [Project.statistic_github(data[i],i) for i in data]    
+        self.injector.db_commit()
+
     def import_commits(self,projects = None):
         if projects is None or projects.rstrip()=="" or projects == "*":
             import_projects = self.injector.get_projects(site = self.site.iid)
@@ -68,15 +79,10 @@ class Crawler:
             new_commits = Parser.parse_commits(commits,format=self.site.server_type,project = project)
             self.injector.insert_data(new_commits)
 
+    @log_time
     def import_users(self):
-        if self.site.server_type == "github":
-            data = self.client.get_users()
-        else:
-            data = self.client.get_users()
-        users = Parser.parse_users(data,self.site.server_type)
-        for i in users:
-            i.site = self.site.iid
-        print(i)
+        data = self.client.get_users()
+        users = Parser.json_to_db(data,Developer,format = self.site.server_type, site = self.site)
         self.injector.insert_data(users)
         return users
 

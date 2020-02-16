@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import re
 import json
 import datetime
@@ -55,6 +56,8 @@ class Project(Base):
     pushed_at = Column(DateTime)
     language = Column(String(64))
     size = Column(Integer)
+    participation = Column(Integer)
+    commits = Column(Integer)
     
     def __init__(self,data = None):
         if data:
@@ -84,6 +87,12 @@ class Project(Base):
         Convertor.json2db(data,ret,"size")
         if "owner" in data and data["owner"]:
             ret.owner = data["owner"]["login"]
+        return ret
+
+    @staticmethod
+    def statistic_github(data,ret):
+        if "all" in data and data["all"]:
+            ret.participation = sum(data["all"])
         return ret
 
     @staticmethod

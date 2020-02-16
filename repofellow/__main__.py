@@ -24,6 +24,7 @@ Example:
     repo-fellow projects import site_id
     repo-fellow commit update *
     repo-fellow commit update project
+    repo-fellow user import
 """
 import os
 import sys
@@ -65,28 +66,29 @@ def main():
         if command == "list":
             for i in injector.get_projects():
                 logging.info(i)
-        if command == "import":
-            site = injector.get_obj(Site,arguments["--site"])
-            injector = Injector(db_user = db_user, db_password = db_password,database = db)
-            data = Crawler(site,injector).import_projects(arguments["--private"])
-            logging.info("total imported projects {}".format(len(data)))
+            return
+        site = injector.get_obj(Site,arguments["--site"])
         if command == "remote":
-            site = injector.get_obj(Site,arguments["<args>"])
             commits = Crawler.create_client(site).getAllProjectCommitsCount("china")
             for i in commits:
                 if i["ref"]:
                     logging.info("{}:{}".format(i["name"],i["ref"]["target"]["history"]["totalCount"]))
                 else:
                     logging.error("{} has none history record".format(i["name"]))
+            return
+        injector = Injector(db_user = db_user, db_password = db_password,database = db)                    
+        if command == "import":    
+            data = Crawler(site,injector).import_projects(arguments["--private"])
+            logging.info("total imported projects {}".format(len(data)))
         if command == "update":
-            site = injector.get_obj(Site,arguments["--site"])
-            injector = Injector(db_user = db_user, db_password = db_password,database = db)
             data = Crawler(site,injector).update_projects(arguments["--since"])
+        if command == "stat":
+            data = Crawler(site,injector).statistic_projects(arguments["--since"])
 
 
     if arguments["user"]:
+        site = injector.get_obj(Site,arguments["--site"])
         if command == "import":
-            site = injector.get_obj(Site,arguments["<args>"])
             data = Crawler(site,injector).import_users()
             logging.info("total imported users {}".format(len(data)))
 

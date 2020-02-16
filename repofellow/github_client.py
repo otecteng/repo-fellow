@@ -119,6 +119,9 @@ class GithubClient(CrawlerClient):
     def get_releases(self,project):
         return self.getResource("/api/v3/repos/{}/releases".format(project))
 
+    def get_project_statistic(self,project):
+        return self.getSingleResource("/api/v3/repos/{}/stats/participation".format(project.path))
+
     def get_groups(self):
         query = '''
 {

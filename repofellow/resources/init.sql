@@ -12,8 +12,13 @@ CREATE TABLE IF NOT EXISTS `project`
   owner     VARCHAR(512),
   site      Integer,
   description VARCHAR(512),
-  created_at     DATETIME,
-  updated_at     DATETIME
+  created_at      DATETIME,
+  updated_at      DATETIME,
+  pushed_at       DATETIME,
+  language        VARCHAR(64),
+  size            Integer,
+  participation   Integer,
+  commits         Integer
 );
 
 CREATE TABLE IF NOT EXISTS `commit`

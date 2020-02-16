@@ -1,6 +1,18 @@
+import logging
 from repofellow.injector import Project,Commit,CommitFile,Event,Developer,Group
 
 class Parser:
+    @staticmethod
+    def json_to_db(data,db_class, format="github", site = None):
+        func = getattr(db_class, "from_{}".format(format))
+        if func is None:
+            logging.error("can not find function {} in {}".format("from_{}".format(format),db_class))
+            return []
+        ret = [func(i) for i in data]
+        if site is not None:
+            [setattr(i,"site",site.iid) for i in ret]
+        return ret
+
     @staticmethod
     def parse_commits(data,format="github", project = None):
         if format == "gitee":
