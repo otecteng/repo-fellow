@@ -23,15 +23,16 @@ site: url, host only
 name:  
 type: github or gitlab  
 
-1.4 get site developers
+1.4 get site developers and groups
 ```
 repofellow user import --site=site_iid
+repofellow group import --site=site_iid
 ```
 
 1.5 get site projects  
 ```
 repofellow project import --site=site_iid
-repofellow project import --site=site_iid --private
+repofellow project import --site=site_iid [--private]
 ```
 
 1.6 get project size and statistic  
@@ -43,11 +44,10 @@ repofellow project commits --site=site_iid [--since=iid]
 
 1.7 get project commits  
 ```
-repofellow commit import --site=site_iid [--since=iid]
-repofellow commit import --site=site_iid --project=project_iid
+repofellow commit import --site=site_iid [--since=iid] [--project=project_iid]
 repofellow tag import --site=site_iid [--since=iid]
+repofellow release import --site=site_iid [--since=iid]
 ```
-
 
 #Build  
 ```
