@@ -37,12 +37,12 @@ repofellow project import --site=site_id --private
 1.6 get project size and statistic  
 ```
 repofellow project update --site=site_id 
-repofellow project stat --site=site_id
+repofellow project stat --site=site_id [--since=iid]
 ```
 
 1.7 get project commits  
 ```
-repofellow commit import --site=site_id 
+repofellow commit import --site=site_id [--since=iid]
 repofellow commit import --site=site_id --project=project_ids
 ```
 

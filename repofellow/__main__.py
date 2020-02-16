@@ -5,15 +5,18 @@ Usage:
     repo-fellow site <command> [<args>]
     repo-fellow project <command> [--site=<id>] [--since=<id>] [--private] [<args>]
     repo-fellow user <command> [--site=<id>] [<args>]
+    repo-fellow group <command> [--site=<id>] [<args>]       
     repo-fellow commit <command> [--site=<id>] [<args>]
     repo-fellow event <command> [--site=<id>] [<args>]
     repo-fellow pr <command> [--site=<id>] [<args>]
-    repo-fellow group <command> [--site=<id>] [<args>]
+    repo-fellow tag <command> [--site=<id>] [--since=<id>] [--project=<id>]
+    repo-fellow release <command> [--site=<id>] [<args>]
 
 Options: 
     -h,--help 
     --site=<id>   repo site id
-    --since=<id>  since object id
+    --since=<id>  since object iid
+    --project=<id>  project iid
     --private     processing private projects
 
 Example:
@@ -35,7 +38,7 @@ import datetime
 import logging
 from docopt import docopt
 from repofellow.crawler import Crawler
-from repofellow.injector import Injector,Commit,Site
+from repofellow.injector import Injector,Commit,Site,Project
 from repofellow.parser import Parser
 from repofellow.repo_mysql import RepoMySQL
 
@@ -106,7 +109,19 @@ def main():
             logging.info("importing from {} of projects {} ".format(site.name,projects))
             injector = Injector(db_user = db_user, db_password = db_password,database = db)
             Crawler(site,injector).import_commits(projects)
+        return
                 
+    if arguments["tag"]:
+        if command == "import":
+            site = injector.get_obj(Site,arguments["--site"])
+            logging.info("importing tags of {}".format(site.name))
+            if arguments["project"]:
+                projects = [injector.get_obj(Project,arguments["project"])]
+            if arguments["--since"]:
+                projects = injector.get_projects( site = arguments["--site"],since = arguments["--since"])
+            Crawler(site,injector).get_tags(projects)
+        return
+
     if arguments["db"]:
         if command == "init":
             if arguments["<args>"]:

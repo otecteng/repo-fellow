@@ -114,10 +114,10 @@ class GithubClient(CrawlerClient):
         return self.getResource("/api/v3/repos/{}/pulls?sort=created&state={}".format(project,state))
 
     def get_tags(self,project):
-        return self.getResource("/api/v3/repos/{}/tags".format(project))
+        return self.getResource("/api/v3/repos/{}/tags?".format(project.path))
 
     def get_releases(self,project):
-        return self.getResource("/api/v3/repos/{}/releases".format(project))
+        return self.getResource("/api/v3/repos/{}/releases?".format(project))
 
     def get_project_statistic(self,project):
         return self.getSingleResource("/api/v3/repos/{}/stats/participation".format(project.path))

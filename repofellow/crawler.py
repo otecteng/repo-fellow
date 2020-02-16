@@ -6,7 +6,7 @@ import gevent
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
-from repofellow.injector import Project,Developer
+from repofellow.injector import Project,Developer,Tag
 from repofellow.decorator import log_time
 
 class Crawler:
@@ -78,6 +78,19 @@ class Crawler:
             logging.info("{} new commit number {}".format(project,len(commits)))
             new_commits = Parser.parse_commits(commits,format=self.site.server_type,project = project)
             self.injector.insert_data(new_commits)
+
+    @log_time
+    def get_tags(self,projects = None):
+        if projects is None:
+            projects = self.injector.get_projects(site = self.site.iid)
+        # logging.info("total projects to update:{}".format(len(import_projects)))
+        for i in projects:
+            tags = self.client.get_tags(i)
+            logging.info("{} new tag number {}".format(i.path,len(tags)))
+            tags = Parser.json_to_db(tags,Tag,site = self.site)
+            for x in tags:
+                x.project_oid = i.oid
+            self.injector.insert_data(tags)
 
     @log_time
     def import_users(self):

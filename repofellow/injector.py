@@ -284,10 +284,20 @@ class Tag(Base):
     __tablename__ = 'tag'
     iid = Column(Integer, primary_key=True)
     oid = Column(Integer)
+    site = Column(Integer)
+    project_oid = Column(Integer)
     project = Column(String(64))
     created_at = Column(DateTime)
     name = Column(String(64))
     commit = Column(String(64))
+
+    def from_github(data,ret = None):
+        if ret is None:
+            ret = Tag()
+        Convertor.json2db(data,ret,"name")
+        if "commit" in data and data["commit"]:
+            ret.commit = data["commit"]["sha"]
+        return ret
 
 class Release(Base):
     __tablename__ = 'release'
@@ -305,6 +315,7 @@ class Injector:
         DBSession = sessionmaker(bind = self.engine)
         self.db_session = DBSession()
         Convertor.load_schema(Project())
+        Convertor.load_schema(Tag())
     
     def insert_data(self,data):
         for i in data:
