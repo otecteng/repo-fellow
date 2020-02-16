@@ -49,6 +49,13 @@ def get_arg(key,default_value = None, args = None):
         return args[key]
     return default_value
 
+def parse_projects_args(arguments,injector):
+    if arguments["--project"]:
+        projects = [injector.get_obj(Project,arguments["--project"])]
+    if arguments["--since"]:
+        projects = injector.get_projects( site = arguments["--site"],since = arguments["--since"])
+    return projects
+
 def main():
     logging.basicConfig(filename = "log/fellow.log", level = logging.INFO, format = "%(asctime)s %(message)s", filemode='a')
     logger = logging.getLogger()    
@@ -104,10 +111,9 @@ def main():
 
     if arguments["commit"]:
         if command == "update":
-            site_id, projects = arguments["<args>"].split(":")
-            site = injector.get_obj(Site,site_id)
-            logging.info("importing from {} of projects {} ".format(site.name,projects))
-            injector = Injector(db_user = db_user, db_password = db_password,database = db)
+            site = injector.get_obj(Site,arguments["--site"])
+            logging.info("importing tags of {}".format(site.name))
+            projects = parse_projects_args(arguments,injector)
             Crawler(site,injector).import_commits(projects)
         return
                 
@@ -115,10 +121,7 @@ def main():
         if command == "import":
             site = injector.get_obj(Site,arguments["--site"])
             logging.info("importing tags of {}".format(site.name))
-            if arguments["project"]:
-                projects = [injector.get_obj(Project,arguments["project"])]
-            if arguments["--since"]:
-                projects = injector.get_projects( site = arguments["--site"],since = arguments["--since"])
+            projects = parse_projects_args(arguments,injector)
             Crawler(site,injector).get_tags(projects)
         return
 

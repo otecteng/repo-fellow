@@ -38,7 +38,7 @@ class CrawlerClient:
         return last_value in values
         
     def getResource(self,url,limit = None, page = None, recordsPerPage = None, last = None, retry = True, data_path = None):
-        _page,_recordsPerPage = 1, 20
+        _page,_recordsPerPage = 1, 100
         _last_field = None
         if page is not None:
             _page = page

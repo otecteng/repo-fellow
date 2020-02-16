@@ -76,6 +76,9 @@ class GithubClient(CrawlerClient):
     def getCommit(self,project,commit):
         return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
 
+    def get_commit(self,project,commit):
+        return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
+
     def get_user_detail(self,login):
         return self.getSingleResource("/api/v3/users/{}".format(login))
 

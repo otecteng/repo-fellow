@@ -61,36 +61,40 @@ class Crawler:
             [Project.statistic_github(data[i],i) for i in data]    
         self.injector.db_commit()
 
+    @log_time
     def import_commits(self,projects = None):
-        if projects is None or projects.rstrip()=="" or projects == "*":
-            import_projects = self.injector.get_projects(site = self.site.iid)
-        else:
-            import_projects = self.injector.get_projects(ids = projects.split(";"))
+        if projects is None:
+            projects = self.injector.get_projects(site = self.site.iid)
         # logging.info("total projects to update:{}".format(len(import_projects)))
-        for i in import_projects:
-            project = i.path
-            logging.info("update project commits:{}".format(project))
-            last_commit = self.injector.get_project_last_commit(project)
+        for i in projects:
+            last_commit = self.injector.get_project_last_commit(i.path)
             if last_commit is not None:
                 commits = self.client.getProjectCommits(i, since = last_commit.created_at + datetime.timedelta(seconds=1))
             else:
                 commits = self.client.getProjectCommits(i)
-            logging.info("{} new commit number {}".format(project,len(commits)))
-            new_commits = Parser.parse_commits(commits,format=self.site.server_type,project = project)
+            logging.info("{} new commit number {}".format(i.path,len(commits)))
+            new_commits = Parser.parse_commits(commits,format=self.site.server_type,project = i.path)
             self.injector.insert_data(new_commits)
 
     @log_time
-    def get_tags(self,projects = None):
+    def get_tags(self,projects = None, with_commits = False):
         if projects is None:
             projects = self.injector.get_projects(site = self.site.iid)
         # logging.info("total projects to update:{}".format(len(import_projects)))
+        commits = []
         for i in projects:
             tags = self.client.get_tags(i)
             logging.info("{} new tag number {}".format(i.path,len(tags)))
             tags = Parser.json_to_db(tags,Tag,site = self.site)
             for x in tags:
                 x.project_oid = i.oid
+                if with_commits:
+                    commits.append((i.path,x.commit))
+                    # commit_data = self.client.get_commit(i.path,x.commit)
+                    # commit = Parser.parse_commits([commit_data],format=self.site.server_type,project = i.path)
+                    # self.injector.insert_data(commit)
             self.injector.insert_data(tags)
+            logging.info("check your tags for duplicated commits")
 
     @log_time
     def import_users(self):
