@@ -6,7 +6,7 @@ Usage:
     repo-fellow project <command> [--site=<id>] [--since=<id>] [--private] [<args>]
     repo-fellow user <command> [--site=<id>] [<args>]
     repo-fellow group <command> [--site=<id>] [<args>]       
-    repo-fellow commit <command> [--site=<id>] [<args>]
+    repo-fellow commit <command> [--site=<id>] [--project=<id>]
     repo-fellow event <command> [--site=<id>] [<args>]
     repo-fellow pr <command> [--site=<id>] [<args>]
     repo-fellow tag <command> [--site=<id>] [--since=<id>] [--project=<id>]
@@ -110,9 +110,9 @@ def main():
             logging.info("total imported pulls {}".format(len(data)))
 
     if arguments["commit"]:
-        if command == "update":
+        if command == "import":
             site = injector.get_obj(Site,arguments["--site"])
-            logging.info("importing tags of {}".format(site.name))
+            logging.info("importing commits of {}".format(site.name))
             projects = parse_projects_args(arguments,injector)
             Crawler(site,injector).import_commits(projects)
         return
