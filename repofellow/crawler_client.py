@@ -5,27 +5,36 @@ import logging
 import repofellow.organization
 
 class CrawlerClient:
+    
     def __init__(self,site,token,data_path = "./data"):
         self.site = site
         self.token = token
         self.session = HTMLSession()
         self.data_path = data_path
+        self.recordsPerPage = 100
 
     def getSingleResource(self,url,retry = True):
         query = self.site + url 
         logging.info(query)
+        rel_next = None
+        rel_last = None
         while True:
             try:
                 response = self.session.get(url = query, timeout = 20)
+                                
+                if "Link" in response.headers:
+                    rel = response.headers["Link"].split(",")
+                    rel_next = rel[0].split(";")[0]
+                    rel_last = rel[1].split(";")[0]
                 if response.status_code > 300:
                     logging.info("Error {} to open {}".format(response.status_code,query))
                 break
+
             except Exception as ex:
-                # print(ex)
                 logging.info("retry {}".format(query))
-                time.sleep(1)                
+                time.sleep(2)                
                 continue
-        return response.json()
+        return response.json(),rel_next,rel_last
 
     def check_last_value(self, data, last_field = None, last_value = None):
         if last_value is None:
@@ -38,7 +47,7 @@ class CrawlerClient:
         return last_value in values
         
     def getResource(self,url,limit = None, page = None, recordsPerPage = None, last = None, retry = True, data_path = None):
-        _page,_recordsPerPage = 1, 100
+        _page,_recordsPerPage = 1, self.recordsPerPage
         _last_field = None
         if page is not None:
             _page = page
@@ -55,7 +64,7 @@ class CrawlerClient:
                 response = self.session.get(url = query, timeout = 60)
                 if response.status_code > 300:
                     logging.error("failed {} to open {}".format(response.status_code,query))
-                    break
+                    break                
                 ret = response.json()
                 if data_path:
                     ret = ret[data_path]

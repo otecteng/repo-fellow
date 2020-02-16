@@ -300,14 +300,28 @@ class Tag(Base):
         return ret
 
 class Release(Base):
-    __tablename__ = 'release'
+    __tablename__ = 'project_release'
     iid = Column(Integer, primary_key=True)
     oid = Column(Integer)
     project = Column(String(64))
+    project_oid = Column(Integer)
     created_at = Column(DateTime)
     name = Column(String(64))
     tag = Column(String(64))
-    author = Column(String(64))
+
+    def from_github(data,ret = None):
+        if ret is None:
+            ret = Release()
+        Convertor.json2db(data,ret,"id","oid")            
+        Convertor.json2db(data,ret,"name")
+        Convertor.json2db(data,ret,"tag_name","tag")
+        Convertor.json2db(data,ret,"created_at")
+        if "author" in data and data["author"]:
+            ret.author = data["author"]["login"]
+        else:
+            logging.info("missing author")
+        return ret
+
 
 class Injector:
     def __init__(self,db_user = "repo", db_password = "", host = "localhost", database = "repo_fellow"):
@@ -316,6 +330,7 @@ class Injector:
         self.db_session = DBSession()
         Convertor.load_schema(Project())
         Convertor.load_schema(Tag())
+        Convertor.load_schema(Release())
     
     def insert_data(self,data):
         for i in data:

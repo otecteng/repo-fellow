@@ -38,6 +38,7 @@ repofellow project import --site=site_iid --private
 ```
 repofellow project update --site=site_iid 
 repofellow project stat --site=site_iid [--since=iid]
+repofellow project commits --site=site_iid [--since=iid]
 ```
 
 1.7 get project commits  

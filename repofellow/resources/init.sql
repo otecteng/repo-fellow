@@ -74,11 +74,12 @@ CREATE TABLE IF NOT EXISTS `tag`
   commit  VARCHAR(64)
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `release`
+CREATE TABLE IF NOT EXISTS `project_release`
 (
   iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
   oid     BIGINT,
   project      VARCHAR(64),
+  project_oid     BIGINT,
   created_at    DATETIME,
   updated_at    DATETIME,
   name  VARCHAR(64),

@@ -1,8 +1,8 @@
 import json
 import logging
+import re
 import time
 import repofellow.organization
-import json
 from repofellow.crawler_client import CrawlerClient
 
 class GithubClient(CrawlerClient):
@@ -74,7 +74,14 @@ class GithubClient(CrawlerClient):
             return self.getResource("/api/v3/repos/{}/{}/commits?".format(owner,name),limit = limit)
 
     def getCommit(self,project,commit):
-        return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
+        return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project.path,commit))
+
+    def get_commit_pages(self,project):
+        _,next,last = self.getSingleResource("/api/v3/repos/{}/commits?per_page={}".format(project.path,self.recordsPerPage))
+        if last is None:
+            return 1
+        page = int(re.split("=|>|",last)[-2])
+        return page
 
     def get_commit(self,project,commit):
         return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
@@ -120,7 +127,7 @@ class GithubClient(CrawlerClient):
         return self.getResource("/api/v3/repos/{}/tags?".format(project.path))
 
     def get_releases(self,project):
-        return self.getResource("/api/v3/repos/{}/releases?".format(project))
+        return self.getResource("/api/v3/repos/{}/releases?".format(project.path))
 
     def get_project_statistic(self,project):
         return self.getSingleResource("/api/v3/repos/{}/stats/participation".format(project.path))

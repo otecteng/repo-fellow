@@ -6,10 +6,19 @@ import gevent
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
-from repofellow.injector import Project,Developer,Tag
+from repofellow.injector import Project,Developer,Tag,Release
 from repofellow.decorator import log_time
 
 class Crawler:
+    @staticmethod
+    def create_client(site):
+        if site.server_type == "github":
+            return GithubClient(site.url,site.token)
+        if site.server_type == "gitlab":
+            return GitlabClient(site.url,site.token)
+        return None
+
+
     def __init__(self,site,injector = None):
         self.site = site
         self.client = Crawler.create_client(site)
@@ -43,10 +52,12 @@ class Crawler:
         return (project,self.client.get_project(project))
 
     @log_time
-    def update_projects(self,since = None):
-        projects_all = list(self.injector.get_projects(site = self.site.iid, since = since))
-        for projects in self.page_objects(projects_all,100):
-            data = self.execute_parallel(self.get_project,projects)
+    def update_projects(self,projects = None):
+        if projects is None:
+            projects = self.injector.get_projects(site = self.site.iid)
+
+        for paged_objs in self.page_objects(projects,100):
+            data = self.execute_parallel(self.get_project,paged_objs)
             [Project.from_github(data[i],i) for i in data]    
         self.injector.db_commit()
 
@@ -54,24 +65,39 @@ class Crawler:
         return (project,self.client.get_project_statistic(project))
 
     @log_time
-    def statistic_projects(self,since = None):
-        projects_all = list(self.injector.get_projects(site = self.site.iid, since = since))
-        for projects in self.page_objects(projects_all,100):
-            data = self.execute_parallel(self.get_project_statistic,projects)
+    def statistic_projects(self,projects = None):
+        if projects is None:
+            projects = self.injector.get_projects(site = self.site.iid)
+
+        for paged_objs in self.page_objects(projects,100):
+            data = self.execute_parallel(self.get_project_statistic,paged_objs)
             [Project.statistic_github(data[i],i) for i in data]    
         self.injector.db_commit()
 
+    def updated_project_commits(self,project):
+        return (project,self.client.get_commit_pages(project))
+
     @log_time
-    def import_commits(self,projects = None):
+    def commits_projects(self,projects = None):
+        if projects is None:
+            projects = self.injector.get_projects(site = self.site.iid)
+        for paged_objs in self.page_objects(projects,100):
+            data = self.execute_parallel(self.updated_project_commits,paged_objs)
+            for project in data:
+                project.commits = data[project] * self.client.recordsPerPage
+        self.injector.db_commit()
+        
+    @log_time
+    def import_commits(self,projects = None,limit = None):
         if projects is None:
             projects = self.injector.get_projects(site = self.site.iid)
         # logging.info("total projects to update:{}".format(len(import_projects)))
         for i in projects:
             last_commit = self.injector.get_project_last_commit(i.path)
             if last_commit is not None:
-                commits = self.client.getProjectCommits(i, since = last_commit.created_at + datetime.timedelta(seconds=1))
+                commits = self.client.getProjectCommits(i, since = last_commit.created_at + datetime.timedelta(seconds=1),limit = limit)
             else:
-                commits = self.client.getProjectCommits(i)
+                commits = self.client.getProjectCommits(i,limit = limit)
             logging.info("{} new commit number {}".format(i.path,len(commits)))
             new_commits = Parser.parse_commits(commits,format=self.site.server_type,project = i.path)
             self.injector.insert_data(new_commits)
@@ -97,17 +123,26 @@ class Crawler:
             logging.info("check your tags for duplicated commits")
 
     @log_time
+    def import_releases(self,projects = None):
+        if projects is None:
+            projects = self.injector.get_projects(site = self.site.iid)
+        # logging.info("total projects to update:{}".format(len(import_projects)))
+        ret = []
+        for i in projects:
+            data = self.client.get_releases(i)
+            logging.info("{} new release number {}".format(i.path,len(data)))
+            data = Parser.json_to_db(data,Release,site = self.site)
+            for j in data:
+                j.project = i.path
+                j.project_oid = i.oid
+                ret = ret + data
+        self.injector.insert_data(ret)
+        return ret
+
+    @log_time
     def import_users(self):
         data = self.client.get_users()
         users = Parser.json_to_db(data,Developer,format = self.site.server_type, site = self.site)
         self.injector.insert_data(users)
         return users
-
-    @staticmethod
-    def create_client(site):
-        if site.server_type == "github":
-            return GithubClient(site.url,site.token)
-        if site.server_type == "gitlab":
-            return GitlabClient(site.url,site.token)
-        return None
 
