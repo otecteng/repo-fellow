@@ -1,28 +1,58 @@
-Usage  
+#Usage  
 
-1.Setting env  
-```  
-export GIT_SITE = "https://xxx"  
-export GIT_TOKEN = "xxx"  
-export GIT_SERVER = "github"  
+1.How to use the package
+1.1 Init database  
 ```
-
-2.Execute crawl projects  
-```
-repofellow project remote owner
+repofellow db init user:password@host
 ```
 
-Development  
+1.2 Set db access in env  
 ```
-python3 -m repofellow project remote owner
+export FELLOW_USER=xxx
+export FELLOW_DB=xxx
+export FELLOW_PASSWORD=xxx
 ```
 
-Build  
+1.3 Create site  
+```
+repofellow site add "https://user:token@site?name&type"
+repofellow site list
+```
+token: repo private access tokem  
+site: url, host only  
+name:  
+type: github or gitlab  
+
+1.4 get site developers
+```
+repofellow user import --site=site_id
+```
+
+1.5 get site projects  
+```
+repofellow project import --site=site_id
+repofellow project import --site=site_id --private
+```
+
+1.6 get project size and statistic  
+```
+repofellow project update --site=site_id 
+repofellow project stat --site=site_id
+```
+
+1.7 get project commits  
+```
+repofellow commit import --site=site_id 
+repofellow commit import --site=site_id --project=project_ids
+```
+
+
+#Build  
 ```
 python3 setup.py sdist bdist_wheel
 ```
 
-for ubuntu 16  
+##For ubuntu 16  
 ```
 export LC_ALL=C
 sudo apt install software-properties-common
