@@ -105,7 +105,23 @@ class Crawler:
             new_commits = Parser.json_to_db(commits, Commit,format=self.site.server_type, project=i, site=self.site)
             self.injector.insert_data(new_commits)
             logging.info("[{}/{}]imported:{}".format(idx,len(projects),i.path))
-        return 
+        return
+
+    def stat_commit(self,commit):
+        return (commit,self.client.get_commit(commit.project,commit.id))
+
+    @log_time
+    def stat_commits(self,projects = None,limit = None):
+        projects = self.get_default_projects(projects)
+
+        for idx,i in enumerate(projects):
+            commits = self.injector.get_commits(project =i).all()
+            for paged_objs in self.page_objects(commits,100):
+                data = self.execute_parallel(self.stat_commit,paged_objs)
+                [x.load_github_stat(data[x]) for x in data]
+            self.injector.db_commit()
+            logging.info("[{}/{}]imported:{}".format(idx,len(projects),i.path))
+        return
 
     @log_time
     def get_tags(self,projects = None, with_commits = False):
@@ -129,7 +145,7 @@ class Crawler:
     @log_time
     def import_releases(self,projects = None):
         projects = self.get_default_projects(projects)
-        
+
         ret = []
         for i in projects:
             data = self.client.get_releases(i)

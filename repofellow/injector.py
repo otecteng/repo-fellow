@@ -181,7 +181,6 @@ class Commit(Base):
 
     @staticmethod
     def from_github(data,project = project):
-        # path : commit/commiter
         data["commit"]["committer"]["date"] = datetime.datetime.strptime(data["commit"]["committer"]["date"][:19], "%Y-%m-%dT%H:%M:%S")
         author = data["commit"]["committer"]
         content = {"id":data["sha"],
@@ -189,9 +188,15 @@ class Commit(Base):
             "message":data["commit"]["message"][:1000]
         }
         ret = Commit(content)
-        ret.issue = Commit.find_issue(content["message"])
+        # ret.issue = Commit.find_issue(content["message"])
         ret.project = project
         return ret
+
+    def load_github_stat(self,data):
+        self.total = data["stats"]["total"]
+        self.additions = data["stats"]["additions"]
+        self.deletions = data["stats"]["deletions"]
+        return self
 
     @staticmethod
     def append_count_github(commit,data):
@@ -360,7 +365,7 @@ class Injector:
 
     def get_commits(self,project = None):
         if project:
-            return self.db_session.query(Commit).filter(Commit.project == project)
+            return self.db_session.query(Commit).filter(Commit.project == project.path)
         else:
             return self.db_session.query(Commit)
 

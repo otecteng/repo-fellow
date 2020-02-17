@@ -136,6 +136,9 @@ def main():
         if command == "import":
             logging.info("importing commits of {}".format(site.name))
             Crawler(site,injector).import_commits(projects,limit = arguments["--limit"])
+        if command == "stat":
+            logging.info("stat commits of {}".format(site.name))
+            Crawler(site,injector).stat_commits(projects,limit = arguments["--limit"])
                 
     if arguments["tag"]:
         if command == "import":

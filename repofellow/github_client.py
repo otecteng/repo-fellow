@@ -74,7 +74,8 @@ class GithubClient(CrawlerClient):
             return self.getResource("/api/v3/repos/{}/{}/commits?".format(owner,name),limit = limit)
 
     def getCommit(self,project,commit):
-        return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project.path,commit))
+        ret,_,_ = self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project.path,commit))
+        return ret
 
     def get_commit_pages(self,project):
         _,next,last = self.getSingleResource("/api/v3/repos/{}/commits?per_page={}".format(project.path,self.recordsPerPage))
@@ -84,10 +85,12 @@ class GithubClient(CrawlerClient):
         return page
 
     def get_commit(self,project,commit):
-        return self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
+        ret,_,_ = self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
+        return ret
 
     def get_user_detail(self,login):
-        return self.getSingleResource("/api/v3/users/{}".format(login))
+        ret,_,_ = self.getSingleResource("/api/v3/users/{}".format(login))
+        return ret
 
     def get_users(self,since = ""):
         ret = []
@@ -107,7 +110,7 @@ class GithubClient(CrawlerClient):
         ret = []
         while True:
             try:
-                data = self.getSingleResource("/api/v3/repositories?since={}&per_page=100".format(since))
+                data,_,_ = self.getSingleResource("/api/v3/repositories?since={}&per_page=100".format(since))
                 ret = ret + data
                 since = data[-1]["id"]
                 if len(data) < 100:
@@ -118,7 +121,8 @@ class GithubClient(CrawlerClient):
         return ret
 
     def get_project(self,project):
-        return self.getSingleResource("/api/v3/repositories/{}".format(project.oid))
+        ret,_,_ = self.getSingleResource("/api/v3/repositories/{}".format(project.oid))
+        return ret
 
     def get_pull_requests(self,project,state="all"):
         return self.getResource("/api/v3/repos/{}/pulls?sort=created&state={}".format(project,state))
@@ -130,7 +134,8 @@ class GithubClient(CrawlerClient):
         return self.getResource("/api/v3/repos/{}/releases?".format(project.path))
 
     def get_project_statistic(self,project):
-        return self.getSingleResource("/api/v3/repos/{}/stats/participation".format(project.path))
+        ret,_,_ = self.getSingleResource("/api/v3/repos/{}/stats/participation".format(project.path))
+        return ret
 
     def get_groups(self):
         query = '''
