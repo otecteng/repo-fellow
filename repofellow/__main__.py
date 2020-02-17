@@ -117,7 +117,6 @@ def main():
         return
 
     site = injector.get_obj(Site,arguments["--site"])
-    logging.info(site)
     if arguments["user"]:
         if command == "import":
             data = Crawler(site,injector).import_users()

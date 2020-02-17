@@ -53,13 +53,15 @@ class CrawlerClient:
             _page = page
         if recordsPerPage is not None:
             _recordsPerPage = recordsPerPage
+        if limit is not None:
+            limit = int(limit)
         if last is not None:
             _last_field,_last_value = last
             _last_field = _last_field.split('/')
         data = []
         while True:
             query = self.site + url + "&page={}&per_page={}".format(_page,_recordsPerPage)
-            logging.info(query)
+            logging.debug(query)
             try:
                 response = self.session.get(url = query, timeout = 60)
                 if response.status_code > 300:
@@ -75,8 +77,7 @@ class CrawlerClient:
                 if(len(ret) < _recordsPerPage):
                     break
             except Exception as ex:
-                print(ex)
-                logging.error("[ERROR] read failed {}".format(query))
+                logging.error("read failed {}".format(query))
                 if retry:
                     continue
                 else:

@@ -3,10 +3,11 @@ import time
 import datetime
 from gevent import monkey; monkey.patch_all()
 import gevent
+from sqlalchemy.orm.query import Query
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
-from repofellow.injector import Project,Developer,Tag,Release
+from repofellow.injector import Project,Developer,Tag,Release,Commit
 from repofellow.decorator import log_time
 
 class Crawler:
@@ -17,7 +18,6 @@ class Crawler:
         if site.server_type == "gitlab":
             return GitlabClient(site.url,site.token)
         return None
-
 
     def __init__(self,site,injector = None):
         self.site = site
@@ -40,6 +40,13 @@ class Crawler:
             ret[r.value[0]] = r.value[1]
         return ret
 
+    def get_default_projects(self,projects):
+        if projects is None:
+            projects = self.injector.get_projects(site = self.site.iid)
+        if type(projects) == Query :
+            projects = projects.all()
+        return projects
+
     def import_projects(self,private = False):
         data = self.client.get_projects(private = private)
         projects = Parser.parse_projects(data,self.site.server_type)
@@ -53,8 +60,7 @@ class Crawler:
 
     @log_time
     def update_projects(self,projects = None):
-        if projects is None:
-            projects = self.injector.get_projects(site = self.site.iid)
+        projects = self.get_default_projects(projects)
 
         for paged_objs in self.page_objects(projects,100):
             data = self.execute_parallel(self.get_project,paged_objs)
@@ -66,8 +72,7 @@ class Crawler:
 
     @log_time
     def statistic_projects(self,projects = None):
-        if projects is None:
-            projects = self.injector.get_projects(site = self.site.iid)
+        projects = self.get_default_projects(projects)
 
         for paged_objs in self.page_objects(projects,100):
             data = self.execute_parallel(self.get_project_statistic,paged_objs)
@@ -79,8 +84,8 @@ class Crawler:
 
     @log_time
     def commits_projects(self,projects = None):
-        if projects is None:
-            projects = self.injector.get_projects(site = self.site.iid)
+        projects = self.get_default_projects(projects)
+
         for paged_objs in self.page_objects(projects,100):
             data = self.execute_parallel(self.updated_project_commits,paged_objs)
             for project in data:
@@ -89,24 +94,23 @@ class Crawler:
         
     @log_time
     def import_commits(self,projects = None,limit = None):
-        if projects is None:
-            projects = self.injector.get_projects(site = self.site.iid)
-        # logging.info("total projects to update:{}".format(len(import_projects)))
-        for i in projects:
+        projects = self.get_default_projects(projects)
+
+        for idx,i in enumerate(projects):
             last_commit = self.injector.get_project_last_commit(i.path)
             if last_commit is not None:
                 commits = self.client.getProjectCommits(i, since = last_commit.created_at + datetime.timedelta(seconds=1),limit = limit)
             else:
                 commits = self.client.getProjectCommits(i,limit = limit)
-            logging.info("{} new commit number {}".format(i.path,len(commits)))
-            new_commits = Parser.parse_commits(commits,format=self.site.server_type,project = i.path)
+            new_commits = Parser.json_to_db(commits, Commit,format=self.site.server_type, project=i, site=self.site)
             self.injector.insert_data(new_commits)
+            logging.info("[{}/{}]imported:{}".format(idx,len(projects),i.path))
+        return 
 
     @log_time
     def get_tags(self,projects = None, with_commits = False):
-        if projects is None:
-            projects = self.injector.get_projects(site = self.site.iid)
-        # logging.info("total projects to update:{}".format(len(import_projects)))
+        projects = self.get_default_projects(projects)
+        
         commits = []
         for i in projects:
             tags = self.client.get_tags(i)
@@ -124,9 +128,8 @@ class Crawler:
 
     @log_time
     def import_releases(self,projects = None):
-        if projects is None:
-            projects = self.injector.get_projects(site = self.site.iid)
-        # logging.info("total projects to update:{}".format(len(import_projects)))
+        projects = self.get_default_projects(projects)
+        
         ret = []
         for i in projects:
             data = self.client.get_releases(i)
