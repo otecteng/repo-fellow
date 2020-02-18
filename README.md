@@ -33,6 +33,7 @@ repofellow group import --site=site_iid
 ```
 repofellow project import --site=site_iid
 repofellow project import --site=site_iid [--private]
+repofellow project users --site=site_iid
 ```
 
 1.6 get project size and statistic  

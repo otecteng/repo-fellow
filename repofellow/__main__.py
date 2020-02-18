@@ -38,9 +38,10 @@ import datetime
 import logging
 from docopt import docopt
 from repofellow.crawler import Crawler
-from repofellow.injector import Injector,Commit,Site,Project
+from repofellow.injector import Injector,Site,Project
 from repofellow.parser import Parser
 from repofellow.repo_mysql import RepoMySQL
+from repofellow.graph import GraphProject
 
 def get_arg(key,default_value = None, args = None):
     if key in os.environ:
@@ -98,9 +99,15 @@ def main():
         if command == "update":
             data = Crawler(site,injector).update_projects(projects)
         if command == "stat":
-            data = Crawler(site,injector).statistic_projects(projects)
+            data = Crawler(site,injector).stat_projects(projects)
         if command == "commits":
             data = Crawler(site,injector).commits_projects(projects)            
+        if command == "contributor":
+            data = Crawler(site,injector).contributor_projects(projects)
+        if command == "graph":
+            data = GraphProject(injector.get_contributors(site)).caculate()
+            logging.info(data)
+            
 
     if arguments["db"]:
         if command == "init":

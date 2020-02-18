@@ -7,8 +7,10 @@ from sqlalchemy.orm.query import Query
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
-from repofellow.injector import Project,Developer,Tag,Release,Commit
+from repofellow.injector import Developer,Tag,Release,Commit,Project,Contributor
 from repofellow.decorator import log_time
+
+
 
 class Crawler:
     @staticmethod
@@ -32,7 +34,7 @@ class Crawler:
            ret.append(objects[i * per_page:(i+1)*per_page])
         return ret
     
-    def execute_parallel(self,func,objects):
+    def execute_parallel(self,func,objects = None):
         ret = {}
         g = [gevent.spawn(func, i) for i in objects]
         gevent.joinall(g)
@@ -45,7 +47,7 @@ class Crawler:
             projects = self.injector.get_projects(site = self.site.iid)
         if type(projects) == Query :
             projects = projects.all()
-        return projects
+        return list(filter(lambda x:x.size != 0, projects))
 
     def import_projects(self,private = False):
         data = self.client.get_projects(private = private)
@@ -71,12 +73,12 @@ class Crawler:
         return (project,self.client.get_project_statistic(project))
 
     @log_time
-    def statistic_projects(self,projects = None):
+    def stat_projects(self,projects = None):
         projects = self.get_default_projects(projects)
 
         for paged_objs in self.page_objects(projects,100):
             data = self.execute_parallel(self.get_project_statistic,paged_objs)
-            [Project.statistic_github(data[i],i) for i in data]    
+            [Project.statistic_github(data[i],i) for i in data]
         self.injector.db_commit()
 
     def updated_project_commits(self,project):
@@ -90,6 +92,17 @@ class Crawler:
             data = self.execute_parallel(self.updated_project_commits,paged_objs)
             for project in data:
                 project.commits = data[project] * self.client.recordsPerPage
+        self.injector.db_commit()
+
+    @log_time
+    def contributor_projects(self,projects = None):
+        projects = self.get_default_projects(projects)
+        contribution_items = []
+        for paged_objs in self.page_objects(projects,100):
+            data = self.execute_parallel(lambda x:(x,self.client.get_contributors(x)),paged_objs)
+            for i in data:
+                contribution_items = contribution_items + Contributor.from_github(data[i],i)
+        self.injector.insert_data(contribution_items)
         self.injector.db_commit()
         
     @log_time

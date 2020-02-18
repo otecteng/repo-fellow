@@ -3,7 +3,6 @@ from repofellow.parser import Parser
 from repofellow.injector import Developer
 
 class TestParser(unittest.TestCase):
-
     def test_json_to_db(self):
         print("com!")
         data =     [{

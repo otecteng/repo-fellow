@@ -1,6 +1,6 @@
 from sqlalchemy.orm.attributes  import InstrumentedAttribute
 from sqlalchemy import inspect
-from sqlalchemy.sql.sqltypes import DateTime,String,Integer
+from sqlalchemy.sql.sqltypes import DateTime,String,Integer,Boolean
 import datetime
 import logging
 
@@ -37,8 +37,10 @@ class Convertor:
 
         field_type = fields[field]
         if isinstance(field_type,DateTime):
-            setattr(obj,field,datetime.datetime.strptime(data[key][:19], "%Y-%m-%dT%H:%M:%S"))
+            return setattr(obj,field,datetime.datetime.strptime(data[key][:19], "%Y-%m-%dT%H:%M:%S"))
         if isinstance(field_type,String):
-            setattr(obj,field,data[key][:field_type.length])
+            return setattr(obj,field,data[key][:field_type.length])
         if isinstance(field_type,Integer):
-            setattr(obj,field,data[key])
+            return setattr(obj,field,data[key])
+        if isinstance(field_type,Boolean):
+            return setattr(obj,field,data[key])

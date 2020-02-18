@@ -3,52 +3,19 @@ import re
 import json
 import datetime
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import Column, String, Integer, Float, DateTime, create_engine
+from sqlalchemy import Column, String, Integer, Float, DateTime,Boolean, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 import logging
 from repofellow.safe_parser import Convertor
 
 Base = declarative_base()
-
-class Site(Base):
-    __tablename__ = 'site'
-    iid = Column(Integer, primary_key=True)    
-    name = Column(String(64))
-    server_type = Column(String(64))
-    url = Column(String(64))
-    token = Column(String(64))
-    created_at = Column(DateTime)
-    def __str__(self):
-        return "{}\t{}\t{}\t{}\t{}".format(self.iid,self.name,self.server_type,self.url,self.created_at)
-
-class Group(Base):
-    __tablename__ = 'developer_group'
-    iid = Column(Integer, primary_key=True)    
-    name = Column(String(64))
-    oid = Column(Integer)
-    site = Column(Integer)
-    location = Column(String(64))
-    repo_count = Column(Integer)
-    created_at = Column(DateTime)
-    def __str__(self):
-        return "{}\t{}\t{}\t{}".format(self.iid,self.name,self.repo_count,self.location)
-
-    @staticmethod
-    def from_github(data):
-        ret = Group()
-        ret.name = data["name"]
-        ret.location = data["location"]
-        ret.description = data["description"]
-        if data["repositories"]:
-            ret.repo_count = data["repositories"]["totalCount"]
-        return ret
-
 class Project(Base):
     __tablename__ = 'project'
     iid = Column(Integer, primary_key=True)    
     oid = Column(Integer)
     site = Column(Integer)
     path = Column(String(64))
+    private = Column(Boolean)
     description = Column(String(512))
     owner = Column(String(64))
     created_at = Column(DateTime)
@@ -85,6 +52,7 @@ class Project(Base):
         Convertor.json2db(data,ret,"pushed_at")
         Convertor.json2db(data,ret,"language")
         Convertor.json2db(data,ret,"size")
+        Convertor.json2db(data,ret,"private")
         if "owner" in data and data["owner"]:
             ret.owner = data["owner"]["login"]
         return ret
@@ -101,6 +69,40 @@ class Project(Base):
             print("[INFO]:empty owner {}".format(data["path_with_namespace"]))
             data["owner"] = {"username":""}
         return Project(data)
+
+
+class Site(Base):
+    __tablename__ = 'site'
+    iid = Column(Integer, primary_key=True)    
+    name = Column(String(64))
+    server_type = Column(String(64))
+    url = Column(String(64))
+    token = Column(String(64))
+    created_at = Column(DateTime)
+    def __str__(self):
+        return "{}\t{}\t{}\t{}\t{}".format(self.iid,self.name,self.server_type,self.url,self.created_at)
+
+class Group(Base):
+    __tablename__ = 'developer_group'
+    iid = Column(Integer, primary_key=True)    
+    name = Column(String(64))
+    oid = Column(Integer)
+    site = Column(Integer)
+    location = Column(String(64))
+    repo_count = Column(Integer)
+    created_at = Column(DateTime)
+    def __str__(self):
+        return "{}\t{}\t{}\t{}".format(self.iid,self.name,self.repo_count,self.location)
+
+    @staticmethod
+    def from_github(data):
+        ret = Group()
+        ret.name = data["name"]
+        ret.location = data["location"]
+        ret.description = data["description"]
+        if data["repositories"]:
+            ret.repo_count = data["repositories"]["totalCount"]
+        return ret
 
 class CommitFile(Base):
     __tablename__ = 'commit_file'
@@ -327,6 +329,31 @@ class Release(Base):
             logging.info("missing author")
         return ret
 
+class Contributor(Base):
+    __tablename__ = 'contributor'
+    iid = Column(Integer, primary_key=True)    
+    project = Column(String(64))
+    project_oid = Column(Integer)
+    developer = Column(String(64))
+    developer_oid = Column(Integer)
+    site = Column(Integer)
+    contribution = Column(Integer)
+    created_at = Column(DateTime)
+
+    @staticmethod
+    def from_github(data,project):
+        return list(map(lambda x:Contributor(x,project),data))
+
+    def __init__(self,json_data,project):
+        self.project = project.path
+        self.project_oid = project.oid
+        self.site = project.site
+        self.developer = json_data["login"]
+        self.developer_oid = json_data["id"]
+        self.contribution = json_data["contributions"]
+
+    def __str__(self):
+        return "{}<={}[{}]".format(self.project,self.developer,self.contribution)
 
 class Injector:
     def __init__(self,db_user = "repo", db_password = "", host = "localhost", database = "repo_fellow"):
@@ -357,11 +384,17 @@ class Injector:
         else:
             return self.db_session.query(Developer)
 
+    def get_contributors(self,site):
+        return self.db_session.query(Contributor).filter(Contributor.site == site.iid).all()
+
     def get_project(self,path):
         return self.db_session.query(Project).filter(Project.path == path).first()
 
     def get_obj(self,type,iid):
         return self.db_session.query(type).get(iid)
+
+    def list_obj(self,type,filter = None):
+        return self.db_session.query(type).all()
 
     def get_commits(self,project = None):
         if project:

@@ -8,8 +8,9 @@ CREATE TABLE IF NOT EXISTS `project`
 (
   iid     BIGINT PRIMARY KEY AUTO_INCREMENT,    
   oid     BIGINT,
-  path      VARCHAR(64),
+  path      VARCHAR(128),
   owner     VARCHAR(512),
+  private BOOLEAN,
   site      Integer,
   description VARCHAR(512),
   created_at      DATETIME,
@@ -122,3 +123,13 @@ CREATE TABLE IF NOT EXISTS `site`
   created_at    DATETIME
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `contributor`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
+  project  VARCHAR(128),
+  project_oid     BIGINT,
+  developer  VARCHAR(128),
+  developer_oid     BIGINT,
+  contribution INT,
+  created_at    DATETIME
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

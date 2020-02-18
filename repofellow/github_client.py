@@ -73,6 +73,11 @@ class GithubClient(CrawlerClient):
         else:
             return self.getResource("/api/v3/repos/{}/{}/commits?".format(owner,name),limit = limit)
 
+    def get_contributors(self,project):
+        return self.getResource("/api/v3/repos/{}/contributors?".format(project.path))
+        # return self.getResource("/api/v3/repos/{}/collaborators?".format(project.path))
+        
+
     def getCommit(self,project,commit):
         ret,_,_ = self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project.path,commit))
         return ret
