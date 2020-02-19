@@ -26,7 +26,8 @@ setuptools.setup(
         "docopt==0.6.2",
         "docutils==0.14",
         "mysql-connector==2.2.9",
-        "PyMySQL==0.9.3"
+        "PyMySQL==0.9.3",
+        "gevent==1.4.0",
     ],
     entry_points={
         "console_scripts": ["repofellow = repofellow.__main__:main"] 

@@ -31,7 +31,7 @@ repofellow group import --site=site_iid
 
 1.5 get site projects  
 ```
-repofellow project import --site=site_iid
+nohup repofellow project import --site=site_iid &
 repofellow project import --site=site_iid --private
 ```
 
@@ -80,12 +80,15 @@ pip3 install repofellow.whl
 
 ##For ubuntu 16  
 ```
+sudo apt-get update
 export LC_ALL=C
 sudo apt install software-properties-common
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
 sudo apt install python3.7
-sudo ln -s /usr/local/bin/python3.7 /usr/bin/python3
-pip3 install wheel
+sudo ln -s /usr/bin/python3.7 /usr/bin/python3
 sudo apt-get install python3.7-gdbm
+sudo apt install python3-pip
+pip3 install wheel
+
 ```

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS `project`
   size            Integer,
   participation   Integer,
   commits         Integer
-);
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `commit`
 (
