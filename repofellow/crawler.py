@@ -39,7 +39,10 @@ class Crawler:
         g = [gevent.spawn(func, i) for i in objects]
         gevent.joinall(g)
         for _,r in enumerate(g):
-            ret[r.value[0]] = r.value[1]
+            if r is None or r.value[0] is None:
+                logging.info("null in execute_parallel")
+            if r.value[1] is not None:
+                ret[r.value[0]] = r.value[1]
         return ret
 
     def get_default_projects(self,projects):
@@ -106,15 +109,15 @@ class Crawler:
         self.injector.db_commit()
         
     @log_time
-    def import_commits(self,projects = None,limit = None):
+    def import_commits(self,projects = None,limit = None, until = None):
         projects = self.get_default_projects(projects)
 
         for idx,i in enumerate(projects):
             last_commit = self.injector.get_project_last_commit(i.path)
             if last_commit is not None:
-                commits = self.client.getProjectCommits(i, since = last_commit.created_at + datetime.timedelta(seconds=1),limit = limit)
+                commits = self.client.get_project_commits(i, since = last_commit.created_at + datetime.timedelta(seconds=1), until_date = until, limit = limit)
             else:
-                commits = self.client.getProjectCommits(i,limit = limit)
+                commits = self.client.get_project_commits(i,until_date = until,limit = limit)
             new_commits = Parser.json_to_db(commits, Commit,format=self.site.server_type, project=i, site=self.site)
             self.injector.insert_data(new_commits)
             logging.info("[{}/{}]imported:{}".format(idx,len(projects),i.path))
@@ -178,3 +181,13 @@ class Crawler:
         self.injector.insert_data(users)
         return users
 
+    @log_time
+    def detail_users(self, since = None, until = None):
+        users = self.injector.get_users(since = since, until = until, site = self.site.iid)
+        logging.info(len(users))
+        for paged_objs in self.page_objects(users,100):
+            data = self.execute_parallel(lambda x:(x,self.client.get_user_detail(x)),paged_objs)
+            for i in data:
+                Developer.from_github(data[i],i)
+        self.injector.db_commit()
+        return users

@@ -14,7 +14,7 @@ class GitlabClient(CrawlerClient):
     def get_projects(self):
         return self.getResource("/api/v4/projects?")
 
-    def getProjectCommits(self,project,limit = None):
+    def get_project_commits(self,project,limit = None):
         return self.getResource("/api/v4/projects/{}/repository/commits?".format(project.oid),limit = limit)
 
     def getCommit(self,project,commit):

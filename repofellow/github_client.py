@@ -66,12 +66,14 @@ class GithubClient(CrawlerClient):
                 break
         return ret
 
-    def getProjectCommits(self, project, limit = None, since = None):
+    def get_project_commits(self, project, limit = None, since = None, until_date = None):
         owner,name = project.path.split("/")
+        url = "/api/v3/repos/{}/{}/commits?".format(owner,name)
         if since:
-            return self.getResource("/api/v3/repos/{}/{}/commits?since={}".format(owner,name,since.strftime("%Y-%m-%dT%H:%M:%SZ")),limit = limit)
-        else:
-            return self.getResource("/api/v3/repos/{}/{}/commits?".format(owner,name),limit = limit)
+            url = url + "&since=" + since.strftime("%Y-%m-%dT%H:%M:%SZ")
+        if until_date:
+            url = url + "&until=" + until_date.strftime("%Y-%m-%dT%H:%M:%SZ")                
+        return self.getResource(url,limit = limit)
 
     def get_contributors(self,project):
         return self.getResource("/api/v3/repos/{}/contributors?".format(project.path))
@@ -94,8 +96,8 @@ class GithubClient(CrawlerClient):
         ret,_,_ = self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
         return ret
 
-    def get_user_detail(self,login):
-        ret,_,_ = self.getSingleResource("/api/v3/users/{}".format(login))
+    def get_user_detail(self,user):
+        ret,_,_ = self.getSingleResource("/api/v3/users/{}".format(user.username))
         return ret
 
     def get_user_pages(self,project):

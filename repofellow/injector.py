@@ -263,9 +263,11 @@ class Developer(Base):
             if data["repositories"]:
                 ret.repo_count = data["repositories"]["totalCount"]
         else:
-            ret.oid,ret.username = data["id"],data["login"]
-            if "name" in data:
-                ret.name,ret.email,ret.created_at = data["name"],safe_value(data,"email",ret.email),datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
+            Convertor.json2db(data,ret,"id","oid")
+            Convertor.json2db(data,ret,"username","login")
+            Convertor.json2db(data,ret,"name")
+            Convertor.json2db(data,ret,"email")
+            Convertor.json2db(data,ret,"created_at")
         return ret
 
     @staticmethod
@@ -319,7 +321,7 @@ class Release(Base):
     def from_github(data,ret = None):
         if ret is None:
             ret = Release()
-        Convertor.json2db(data,ret,"id","oid")            
+        Convertor.json2db(data,ret,"id","oid")
         Convertor.json2db(data,ret,"name")
         Convertor.json2db(data,ret,"tag_name","tag")
         Convertor.json2db(data,ret,"created_at")
@@ -363,6 +365,7 @@ class Injector:
         Convertor.load_schema(Project())
         Convertor.load_schema(Tag())
         Convertor.load_schema(Release())
+        Convertor.load_schema(Developer())
     
     def insert_data(self,data):
         for i in data:
@@ -378,13 +381,20 @@ class Injector:
             return self.db_session.query(Project).filter(Project.site == site)
         return self.db_session.query(Project)
 
-    def get_users(self,start_from = None):
-        if start_from:
-            return self.db_session.query(Developer).filter(Developer.iid > start_from)
-        else:
-            return self.db_session.query(Developer)
+    def get_users(self,since = None, until = None, site = None):
+        ret = self.db_session.query(Developer)
+        if since:
+            ret = ret.filter(Developer.iid >= int(since))
+        if until:
+            ret = ret.filter(Developer.iid < int(until))
+        if site:
+            ret = ret.filter(Developer.site == site)
+        return ret.all()
 
-    def get_contributors(self,site):
+    def get_contributors(self,site,filter = None):
+        if filter:
+            print(filter)
+            return self.db_session.query(Contributor).filter(Contributor.site == site.iid).filter(Contributor.project.like("%{}%".format(filter))).all()    
         return self.db_session.query(Contributor).filter(Contributor.site == site.iid).all()
 
     def get_project(self,path):
@@ -394,6 +404,8 @@ class Injector:
         return self.db_session.query(type).get(iid)
 
     def list_obj(self,type,filter = None):
+        if filter:
+            return self.db_session.query(type).filter(filter).all()
         return self.db_session.query(type).all()
 
     def get_commits(self,project = None):

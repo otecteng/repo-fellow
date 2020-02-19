@@ -54,9 +54,28 @@ repofellow tag import --site=site_iid [--since=iid]
 repofellow release import --site=site_iid [--since=iid]
 ```
 
-#Build  
+#Develop  
+##Version Requirement  
+Python 3.7  
+MySQL 5.7
+
+##Install depemdency
+```
+pip3 install -r requirements.txt
+```
+
+##Run from source code
+```
+python3 -m repofellow 
+```
+
+##Build package  
 ```
 python3 setup.py sdist bdist_wheel
+```
+##Deploy package  
+```
+pip3 install repofellow.whl
 ```
 
 ##For ubuntu 16  

@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS `contributor`
   iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
   project  VARCHAR(128),
   project_oid     BIGINT,
+  site     BIGINT,
   developer  VARCHAR(128),
   developer_oid     BIGINT,
   contribution INT,

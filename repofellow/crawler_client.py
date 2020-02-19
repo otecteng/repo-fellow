@@ -63,7 +63,7 @@ class CrawlerClient:
             query = self.site + url + "&page={}&per_page={}".format(_page,_recordsPerPage)
             logging.debug(query)
             try:
-                response = self.session.get(url = query, timeout = 60)
+                response = self.session.get(url = query, timeout = 20)
                 if response.status_code > 300:
                     logging.error("failed {} to open {}".format(response.status_code,query))
                     break                

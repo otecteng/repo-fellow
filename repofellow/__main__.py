@@ -3,10 +3,10 @@
 Usage:
     repo-fellow db <command> --conn=<str> [--fellow_db=<str>] [--fellow_db=<str>] [--fellow_password=<str>]
     repo-fellow site <command> [<args>]
-    repo-fellow project <command> [--site=<id>] [--since=<id>] [--private] [<args>]
-    repo-fellow user <command> [--site=<id>] [<args>]
+    repo-fellow project <command> [--site=<id>] [--since=<id>] [--private] [--projects=<filter>]
+    repo-fellow user <command> [--site=<id>] [--since=<id>] [--until=<id>]
     repo-fellow group <command> [--site=<id>] [<args>]       
-    repo-fellow commit <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>]
+    repo-fellow commit <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--until=<date>]
     repo-fellow event <command> [--site=<id>] [<args>]
     repo-fellow pr <command> [--site=<id>] [<args>]
     repo-fellow tag <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>]
@@ -14,11 +14,13 @@ Usage:
 
 Options: 
     -h,--help 
-    --conn=<str>  database connection string
-    --site=<id>   repo site id
-    --since=<id>  since project iid
+    --conn=<str>    database connection string
+    --site=<id>     repo site id
+    --since=<id>    since project iid
     --project=<id>  project iid
-    --private     processing private projects
+    --projects=<filter>  project path like filter
+    --private       processing private projects
+    --until=<date>   until date of commit
 
 Example:
     repo-fellow db init --conn=root:xxx@localhost
@@ -113,7 +115,9 @@ def main():
         if command == "contributor":
             data = Crawler(site,injector).contributor_projects(projects)
         if command == "graph":
-            data = GraphProject(injector.get_contributors(site)).caculate()
+            contributions = injector.get_contributors(site,arguments["--projects"])
+            logging.info("total contributions: {}".format(len(contributions)))
+            data = GraphProject(contributions).caculate()
             logging.info(data)
             
     if arguments["site"]:
@@ -124,11 +128,15 @@ def main():
         return
 
     site = injector.get_obj(Site,arguments["--site"])
+    
     if arguments["user"]:
         if command == "import":
             data = Crawler(site,injector).import_users()
             logging.info("total imported users {}".format(len(data)))
-        return
+            return
+        if command == "detail":
+            data = Crawler(site,injector).detail_users(since = arguments["--since"],until = arguments["--until"])
+            return
 
     if arguments["pr"]:
         if command == "import":
@@ -141,8 +149,11 @@ def main():
     projects = parse_projects_args(arguments,injector)
     if arguments["commit"]:
         if command == "import":
-            logging.info("importing commits of {}".format(site.name))
-            Crawler(site,injector).import_commits(projects,limit = arguments["--limit"])
+            until_date = None
+            if arguments["--until"]:
+                until_date = datetime.datetime.strptime(arguments["--until"], "%Y-%m-%d")
+            logging.info("importing commits of {} from ".format(site.name,until_date))
+            Crawler(site,injector).import_commits(projects,limit = arguments["--limit"], until = until_date)
         if command == "stat":
             logging.info("stat commits of {}".format(site.name))
             Crawler(site,injector).stat_commits(projects,limit = arguments["--limit"])
