@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS `tag`
   iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
   oid     BIGINT,
   project      VARCHAR(64),
+  project_oid    BIGINT,  
+  site    BIGINT,  
   created_at    DATETIME,
   updated_at    DATETIME,
   name  VARCHAR(64),

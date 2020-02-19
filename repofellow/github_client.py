@@ -75,19 +75,20 @@ class GithubClient(CrawlerClient):
 
     def get_contributors(self,project):
         return self.getResource("/api/v3/repos/{}/contributors?".format(project.path))
-        # return self.getResource("/api/v3/repos/{}/collaborators?".format(project.path))
-        
+        # return self.getResource("/api/v3/repos/{}/collaborators?".format(project.path))        
 
     def getCommit(self,project,commit):
         ret,_,_ = self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project.path,commit))
         return ret
 
-    def get_commit_pages(self,project):
-        _,next,last = self.getSingleResource("/api/v3/repos/{}/commits?per_page={}".format(project.path,self.recordsPerPage))
-        if last is None:
+    def get_last_page(self,rel_last):
+        if rel_last is None:
             return 1
-        page = int(re.split("=|>|",last)[-2])
-        return page
+        return int(re.split("=|>|",rel_last)[-2])
+
+    def get_commit_pages(self,project):
+        _,_,rel_last = self.getSingleResource("/api/v3/repos/{}/commits?per_page={}".format(project.path,self.recordsPerPage))
+        return get_last_page(rel_last)
 
     def get_commit(self,project,commit):
         ret,_,_ = self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
@@ -97,18 +98,18 @@ class GithubClient(CrawlerClient):
         ret,_,_ = self.getSingleResource("/api/v3/users/{}".format(login))
         return ret
 
+    def get_user_pages(self,project):
+        _,_,rel_last = self.getSingleResource("/api/v3/users?since={}&per_page={}".format(project.path,self.recordsPerPage))
+        return get_last_page(rel_last)
+
     def get_users(self,since = ""):
         ret = []
         while True:
-            try:
-                data = self.getSingleResource("/api/v3/users?since={}&per_page=100".format(since))
-                ret = ret + data
-                since = data[-1]["id"]
-                if len(data) < 100:
-                    break
-            except(Exception):
-                time.sleep(1)
-                continue
+            data,_,_ = self.getSingleResource("/api/v3/users?since={}&per_page=100".format(since))
+            ret = ret + data
+            if len(data) < 100:
+                break
+            since = data[-1]["id"]            
         return ret
 
     def get_all_repos(self,since = "0"):
@@ -173,14 +174,15 @@ class GithubClient(CrawlerClient):
                 gq_query = query.replace("$recordsPerPage",recordsPerPage).replace("$after","after:\"{}\"".format(endCursor))
             else:
                 gq_query = query.replace("$recordsPerPage",recordsPerPage).replace("$after","")
+            # logging.info(gq_query)
             data = self.gqResource(gq_query)
             if "errors" in data:
                 logging.error(data["errors"])
                 break
             totalCount = data["data"]["search"]["userCount"]
-            endCursor = data["data"]["search"]["pageInfo"]["endCursor"]
+            endCursor = data["data"]["search"]["pageInfo"]["endCursor"]            
             ret = ret + list(map(lambda x: x["node"],data["data"]["search"]["edges"]))
-            if len(ret) == totalCount:
+            if endCursor is None or len(ret) == totalCount:
                 break
         return ret
 

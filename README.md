@@ -3,7 +3,7 @@
 1.How to use the package
 1.1 Init database  
 ```
-repofellow db init user:password@host
+repofellow db init --conn=user:password@host
 ```
 
 1.2 Set db access in env  
@@ -32,20 +32,24 @@ repofellow group import --site=site_iid
 1.5 get site projects  
 ```
 repofellow project import --site=site_iid
-repofellow project import --site=site_iid [--private]
-repofellow project users --site=site_iid
+repofellow project import --site=site_iid --private
 ```
 
 1.6 get project size and statistic  
 ```
-repofellow project update --site=site_iid 
-repofellow project stat --site=site_iid [--since=iid]
-repofellow project commits --site=site_iid [--since=iid]
+repofellow project update --site=site_iid
+repofellow project contributor --site=site_iid --since=iid
+repofellow project stat --site=site_iid --since=iid
+repofellow project commits --site=site_iid --since=iid
+
 ```
+update: get size,pushed date  
+stat: get weekly commit count of previos year  
+commits: get total commits pages of project  
 
 1.7 get project commits  
 ```
-repofellow commit import --site=site_iid [--since=iid] [--project=project_iid]
+repofellow commit import --site=site_iid [--since=iid] [--project=project_iid] [--limit=200]
 repofellow tag import --site=site_iid [--since=iid]
 repofellow release import --site=site_iid [--since=iid]
 ```

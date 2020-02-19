@@ -1,7 +1,7 @@
 """repo crawler via command-line.
 
 Usage:
-    repo-fellow db <command> [<args>]
+    repo-fellow db <command> --conn=<str> [--fellow_db=<str>] [--fellow_db=<str>] [--fellow_password=<str>]
     repo-fellow site <command> [<args>]
     repo-fellow project <command> [--site=<id>] [--since=<id>] [--private] [<args>]
     repo-fellow user <command> [--site=<id>] [<args>]
@@ -14,13 +14,14 @@ Usage:
 
 Options: 
     -h,--help 
+    --conn=<str>  database connection string
     --site=<id>   repo site id
     --since=<id>  since project iid
     --project=<id>  project iid
     --private     processing private projects
 
 Example:
-    repo-fellow db init root:xxx@localhost
+    repo-fellow db init --conn=root:xxx@localhost
     repo-fellow site add https://user:password@site?name&type
     repo-fellow projects remote owner
     repo-fellow projects list
@@ -76,6 +77,13 @@ def main():
     site = Site()
     site.server_type,site.url,site.token = get_arg("GIT_SERVER"), get_arg("GIT_SITE"), get_arg("GIT_TOKEN")
     
+    if arguments["db"]:
+        if command == "init":
+            if arguments["--conn"]:
+                db_user, db_password, db_host = re.split(":|@",arguments["--conn"])
+            RepoMySQL().init_db(host = db_host, root_password = db_password)
+        return
+
     if arguments["project"]:
         if command == "list":
             for i in injector.get_projects():
@@ -91,7 +99,7 @@ def main():
                     logging.error("{} has none history record".format(i["name"]))
             return
         injector = Injector(db_user = db_user, db_password = db_password,database = db)                    
-        if command == "import":    
+        if command == "import":
             data = Crawler(site,injector).import_projects(arguments["--private"])
             logging.info("total imported projects {}".format(len(data)))
 
@@ -108,14 +116,6 @@ def main():
             data = GraphProject(injector.get_contributors(site)).caculate()
             logging.info(data)
             
-
-    if arguments["db"]:
-        if command == "init":
-            if arguments["<args>"]:
-                db_user, db_password, db_host = re.split(":|@",arguments["<args>"])
-            RepoMySQL().init_db(host = db_host, root_password = db_password)
-        return
-
     if arguments["site"]:
         if command == "add":
             Injector(db_user = db_user, db_password = db_password,database = db).add_site(arguments["<args>"])
@@ -161,6 +161,7 @@ def main():
 
     if arguments["group"]:
         if command == "import":
+            # can not import more than 1000 groups now
             data = Crawler.create_client(site).get_groups()
             injector.insert_data(Parser.parse_groups(data,site.server_type))
             logging.info("total imported groups {}".format(len(data)))

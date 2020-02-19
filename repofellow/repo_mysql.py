@@ -3,9 +3,9 @@ import mysql.connector
 import logging
 
 class RepoMySQL:
-    def init_db(self, root_password, host = "localhost", db_name = "repo_fellow", db_user = "repo", db_password = "fellow"):
+    def init_db(self, root_password, host = "localhost", fellow_db = "repo_fellow", fellow_user = "repo", fellow_password = "fellow"):
         logging.info("create database on {}".format(host))
-        logging.info("new database: user={} database={}".format(db_user,db_name))
+        logging.info("new database: user={} database={}".format(fellow_user,fellow_db))
 
         db_script = "{}/resources/init.sql".format(os.path.dirname(__file__))
         
