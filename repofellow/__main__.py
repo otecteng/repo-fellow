@@ -41,7 +41,7 @@ from repofellow.crawler import Crawler
 from repofellow.injector import Injector,Site,Project
 from repofellow.parser import Parser
 from repofellow.repo_mysql import RepoMySQL
-from repofellow.graph import GraphProject
+from kanban.graph import GraphProject
 
 def get_arg(key,default_value = None, args = None):
     if key in os.environ:
