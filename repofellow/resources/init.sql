@@ -136,3 +136,16 @@ CREATE TABLE IF NOT EXISTS `contributor`
   contribution INT,
   created_at    DATETIME
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `project_event`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,    
+  oid      BIGINT,
+  project  VARCHAR(128),
+  project_oid     BIGINT,
+  site     BIGINT,
+  author   VARCHAR(64),
+  event_type   VARCHAR(64),  
+  description  VARCHAR(1024),
+  created_at    DATETIME
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

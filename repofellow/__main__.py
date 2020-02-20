@@ -7,7 +7,7 @@ Usage:
     repo-fellow user <command> [--site=<id>] [--since=<id>] [--until=<id>]
     repo-fellow group <command> [--site=<id>] [<args>]       
     repo-fellow commit <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--until=<date>]
-    repo-fellow event <command> [--site=<id>] [<args>]
+    repo-fellow event <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--until=<date>]
     repo-fellow pr <command> [--site=<id>] [<args>]
     repo-fellow tag <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>]
     repo-fellow release <command> [--site=<id>] [--project=<id>] [--since=<id>]
@@ -158,6 +158,11 @@ def main():
             logging.info("stat commits of {}".format(site.name))
             Crawler(site,injector).stat_commits(projects,limit = arguments["--limit"])
                 
+    if arguments["event"]:
+        if command == "import":
+            logging.info("importing event of {} from ".format(site.name))
+            Crawler(site,injector).import_events(projects,limit = arguments["--limit"])
+
     if arguments["tag"]:
         if command == "import":
             logging.info("importing tags of {}".format(site.name))

@@ -16,15 +16,6 @@ class Parser:
         return ret
 
     @staticmethod
-    def parse_events(data,format="github"):
-        if format == "gitee":
-            return list(map(lambda x:Event.from_gitee(x),data))
-        elif format == "gitlab":
-            return list(map(lambda x:Event.from_gitlab(x),data))
-        else:
-            return list(map(lambda x:Event.from_github(x),data))
-
-    @staticmethod
     def parse_projects(data,format="github"):
         if format == "gitee":
             return list(map(lambda x:Project.from_gitee(x),data))

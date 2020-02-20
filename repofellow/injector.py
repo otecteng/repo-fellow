@@ -207,28 +207,43 @@ class Commit(Base):
         commit.total = data["stats"]["total"]
         return commit
 
-class Event:
-    def __init__(self,data):
-        self.type = data["action_name"]
-        self.author = data["author"]["username"]
-        self.project = data["project_id"]
-        self.created_at = data["created_at"]
-        
+class Event(Base):
+    __tablename__ = 'project_event'
+    iid = Column(Integer, primary_key=True)
+    oid = Column(Integer)
+    project = Column(String(128))
+    project_oid = Column(Integer)
+    site = Column(Integer)
+    author = Column(String(64))
+    event_type = Column(String(64))
+    description = Column(String(1024))
+    created_at = Column(DateTime)
+
+    def __init__(self,project = None):
+        self.created_at = datetime.datetime.now()
+        if project is not None:
+            self.project = project.path
+            self.project_oid = project.oid
+            self.site = project.site
+
     def __str__(self):
-        return "{}[{}]:{}({})".format(self.created_at,self.author,self.project,self.type)
+        return "{}[{}]:{}({})".format(self.created_at,self.author,self.project,self.event_type)
 
     @staticmethod
-    def from_github(data):
-        data["action_name"] = data["type"]
-        if data["type"] == "PushEvent":
-            data["action_name"] = "pushed to"
-        if data["type"] == "PullRequestEvent":
-            data["action_name"] = data["payload"]["action"]
-
+    def from_github(data, project = None, ret = None):
+        if ret is None:
+            ret = Event(project)
+        Convertor.json2db(data,ret,"id","oid")
+        Convertor.json2db(data,ret,"type","event_type")
+        Convertor.json2db(data,ret,"created_at")
+        if "actor" in data and data["actor"]:
+            ret.author = data["actor"]["login"]
         data["author"]={"username":data["actor"]["login"]}
-        data["project_id"] = data["repo"]["name"]
-        data["created_at"] = datetime.datetime.strptime(data["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
-        return Event(data)
+        if "payload" in data and data["payload"]:
+            if "commits" in data["payload"] and data["payload"]["commits"]:
+                ret.description = "commits_size={};author_email={};author_name={}".format(
+                    data["payload"]["size"],data["payload"]["commits"][0]["author"]["email"],data["payload"]["commits"][0]["author"]["name"])
+        return ret
 
     @staticmethod
     def from_gitlab(data):

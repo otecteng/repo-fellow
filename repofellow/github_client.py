@@ -75,6 +75,11 @@ class GithubClient(CrawlerClient):
             url = url + "&until=" + until_date.strftime("%Y-%m-%dT%H:%M:%SZ")                
         return self.getResource(url,limit = limit)
 
+    def get_project_events(self, project, limit = None, since = None, until_date = None):
+        owner,name = project.path.split("/")
+        url = "/api/v3/repos/{}/{}/events?".format(owner,name)
+        return self.getResource(url,limit = limit, recordsPerPage= 30)
+
     def get_contributors(self,project):
         return self.getResource("/api/v3/repos/{}/contributors?".format(project.path))
         # return self.getResource("/api/v3/repos/{}/collaborators?".format(project.path))        

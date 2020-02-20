@@ -7,7 +7,7 @@ from sqlalchemy.orm.query import Query
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
-from repofellow.injector import Developer,Tag,Release,Commit,Project,Contributor
+from repofellow.injector import Developer,Tag,Release,Commit,Project,Contributor,Event
 from repofellow.decorator import log_time
 
 
@@ -106,7 +106,6 @@ class Crawler:
             for i in data:
                 contribution_items = contribution_items + Contributor.from_github(data[i],i)
         self.injector.insert_data(contribution_items)
-        self.injector.db_commit()
         
     @log_time
     def import_commits(self,projects = None,limit = None, until = None):
@@ -152,9 +151,6 @@ class Crawler:
                 x.project_oid = i.oid
                 if with_commits:
                     commits.append((i.path,x.commit))
-                    # commit_data = self.client.get_commit(i.path,x.commit)
-                    # commit = Parser.parse_commits([commit_data],format=self.site.server_type,project = i.path)
-                    # self.injector.insert_data(commit)
             self.injector.insert_data(tags)
             logging.info("check your tags for duplicated commits")
 
@@ -191,3 +187,15 @@ class Crawler:
                 Developer.from_github(data[i],i)
         self.injector.db_commit()
         return users
+
+    @log_time
+    def import_events(self,projects = None,limit = None):
+        projects = self.get_default_projects(projects)
+        print(len(projects))
+        for idx,i in enumerate(projects):
+            data = self.client.get_project_events(i)
+            new_events = Parser.json_to_db(data, Event,format=self.site.server_type, project=i, site=self.site)
+            self.injector.insert_data(new_events)
+            self.injector.db_commit()
+            logging.info("[{}/{}]imported:{}".format(idx,len(projects),i.path))
+        return
