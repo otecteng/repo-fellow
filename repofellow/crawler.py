@@ -149,6 +149,7 @@ class Crawler:
             tags = Parser.json_to_db(tags,Tag,site = self.site)
             for x in tags:
                 x.project_oid = i.oid
+                x.project = i.path
                 if with_commits:
                     commits.append((i.path,x.commit))
             self.injector.insert_data(tags)
