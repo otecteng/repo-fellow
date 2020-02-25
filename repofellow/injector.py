@@ -207,6 +207,12 @@ class Commit(Base):
         commit.total = data["stats"]["total"]
         return commit
 
+    def style_check(self,style = None):
+        if style is None:
+            style = r'(.*)#(.*)\s+(.*):\s+(.*?)'
+        self.style_checked = (re.match(style, self.message, flags=0) is not None)
+        return self
+
 class Event(Base):
     __tablename__ = 'project_event'
     iid = Column(Integer, primary_key=True)

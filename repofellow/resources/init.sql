@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS `commit`
   additions Integer,
   deletions Integer,
   total Integer,
-  issue  VARCHAR(64)
+  issue  VARCHAR(64),
+  style_checked BOOLEAN
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `commit_file`
