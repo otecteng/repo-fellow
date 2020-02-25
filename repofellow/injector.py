@@ -134,7 +134,8 @@ class Commit(Base):
     deletions = Column(Integer)
     total = Column(Integer)
     issue = Column(String(64))
-
+    style_checked = Column(Boolean)
+    
     def __init__(self,data):
         self.id = data["id"]
         self.message = data["message"].rstrip()[:1000]

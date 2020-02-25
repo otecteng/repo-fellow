@@ -75,7 +75,6 @@ def main():
     command = arguments["<command>"]
 
     db_user, db_password, db = get_arg("FELLOW_USER","repo"), get_arg("FELLOW_PASSWORD","fellow"), get_arg("FELLOW_DB","repo_fellow")
-
     injector = Injector(db_user = db_user, db_password = db_password,database = db)
     site = Site()
     site.server_type,site.url,site.token = get_arg("GIT_SERVER"), get_arg("GIT_SITE"), get_arg("GIT_TOKEN")
