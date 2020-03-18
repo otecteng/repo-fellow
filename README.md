@@ -1,6 +1,6 @@
-#Usage  
+# Usage  
 
-1.How to use the package
+1.How to use the package  
 1.1 Init database  
 ```
 repofellow db init --conn=user:password@host
@@ -18,7 +18,7 @@ export FELLOW_PASSWORD=xxx
 repofellow site add "https://user:token@site?name&type"
 repofellow site list
 ```
-token: repo private access tokem  
+token: repo private access token  
 site: url, host only  
 name:  
 type: github or gitlab  
@@ -55,31 +55,31 @@ repofellow release import --site=site_iid [--since=iid]
 repofellow commit style --site=site_iid --since=iid --style="(.*)#(.*)\s+(.*):\s+(.*?)"
 ```
 
-#Develop  
-##Version Requirement  
+# Develop  
+## Version Requirement  
 Python 3.7  
 MySQL 5.7
 
-##Install depemdency
+## Install depemdency
 ```
 pip3 install -r requirements.txt
 ```
 
-##Run from source code
+## Run from source code
 ```
 python3 -m repofellow 
 ```
 
-##Build package  
+## Build package  
 ```
 python3 setup.py sdist bdist_wheel
 ```
-##Deploy package  
+## Deploy package  
 ```
 pip3 install repofellow.whl
 ```
 
-##For ubuntu 16  
+## For ubuntu 16  
 ```
 sudo apt-get update
 export LC_ALL=C

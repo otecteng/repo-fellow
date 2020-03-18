@@ -35,6 +35,9 @@ CREATE TABLE IF NOT EXISTS `commit`
   deletions Integer,
   total Integer,
   issue  VARCHAR(64),
+  site Integer,
+  project_oid Integer,
+  oid Integer,
   style_checked BOOLEAN
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 

@@ -95,7 +95,7 @@ class GithubClient(CrawlerClient):
 
     def get_commit_pages(self,project):
         _,_,rel_last = self.getSingleResource("/api/v3/repos/{}/commits?per_page={}".format(project.path,self.recordsPerPage))
-        return get_last_page(rel_last)
+        return self.get_last_page(rel_last)
 
     def get_commit(self,project,commit):
         ret,_,_ = self.getSingleResource("/api/v3/repos/{}/commits/{}".format(project,commit))
