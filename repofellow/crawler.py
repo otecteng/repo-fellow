@@ -6,6 +6,7 @@ import gevent
 from sqlalchemy.orm.query import Query
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
+from repofellow.gitee_client import GiteeClient
 from repofellow.parser import Parser
 from repofellow.injector import Developer,Tag,Release,Commit,Project,Contributor,Event,Pull
 from repofellow.decorator import log_time
@@ -19,6 +20,8 @@ class Crawler:
             return GithubClient(site.url,site.token)
         if site.server_type == "gitlab":
             return GitlabClient(site.url,site.token)
+        if site.server_type == "gitee":
+            return GiteeClient(site.url,site.token)
         return None
 
     def __init__(self,site,injector = None):
