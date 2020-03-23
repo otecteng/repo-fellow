@@ -311,6 +311,21 @@ class Pull(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
+    def from_github(data,ret = None):
+        if ret is None:
+            ret = Pull()
+        Convertor.json2db(data,ret,"state")
+        Convertor.json2db(data,ret,"title")
+        Convertor.json2db(data,ret,"created_at")
+        Convertor.json2db(data,ret,"updated_at")
+        if "user" in data and data["user"]:
+            ret.user = data["user"]["login"]
+        if "head" in data and data["head"]:
+            ret.head = data["head"]["sha"]
+        if "base" in data and data["base"]:
+            ret.base = data["base"]["sha"]
+        return ret
+
 class Tag(Base):
     __tablename__ = 'tag'
     iid = Column(Integer, primary_key=True)

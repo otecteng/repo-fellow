@@ -138,7 +138,7 @@ class GithubClient(CrawlerClient):
         return ret
 
     def get_pull_requests(self,project,state="all"):
-        return self.getResource("/api/v3/repos/{}/pulls?sort=created&state={}".format(project,state))
+        return self.getResource("/api/v3/repos/{}/pulls?sort=created&state={}".format(project.path,state))
 
     def get_tags(self,project):
         return self.getResource("/api/v3/repos/{}/tags?".format(project.path))
@@ -247,4 +247,3 @@ class GithubClient(CrawlerClient):
                 break
             page = page + 1
         return ret
-

@@ -7,7 +7,7 @@ from sqlalchemy.orm.query import Query
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
-from repofellow.injector import Developer,Tag,Release,Commit,Project,Contributor,Event
+from repofellow.injector import Developer,Tag,Release,Commit,Project,Contributor,Event,Pull
 from repofellow.decorator import log_time
 
 
@@ -198,5 +198,15 @@ class Crawler:
             new_events = Parser.json_to_db(data, Event,format=self.site.server_type, project=i, site=self.site)
             self.injector.insert_data(new_events)
             self.injector.db_commit()
+            logging.info("[{}/{}]imported:{}".format(idx,len(projects),i.path))
+        return
+
+    @log_time
+    def import_pull_requests(self,projects = None,limit = None, until = None):
+        projects = self.get_default_projects(projects)
+        for idx,i in enumerate(projects):
+            data = self.client.get_pull_requests(i)
+            new_prs = Parser.json_to_db(data, Pull,format=self.site.server_type, project=i, site=self.site)
+            self.injector.insert_data(new_prs)
             logging.info("[{}/{}]imported:{}".format(idx,len(projects),i.path))
         return

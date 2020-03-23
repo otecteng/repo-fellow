@@ -1,16 +1,16 @@
 """repo crawler via command-line.
 
 Usage:
-    repo-fellow db <command> --conn=<str> [--fellow_db=<str>] [--fellow_db=<str>] [--fellow_password=<str>]
+    repo-fellow db <command> --conn=<str> [--fellow_db=<str>] [--fellow_db=<str>] [--fellow_password=<str>] [--logging=<debug>]
     repo-fellow site <command> [<args>]
-    repo-fellow project <command> [--site=<id>] [--since=<id>] [--private] [--projects=<filter>]
-    repo-fellow user <command> [--site=<id>] [--since=<id>] [--until=<id>]
+    repo-fellow project <command> [--site=<id>] [--since=<id>] [--private] [--projects=<filter>] [--logging=<debug>]
+    repo-fellow user <command> [--site=<id>] [--since=<id>] [--until=<id>] [--logging=<debug>]
     repo-fellow group <command> [--site=<id>] [<args>]       
-    repo-fellow commit <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--until=<date>] [--style=<str>]
+    repo-fellow commit <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--until=<date>] [--style=<str>] [--logging=<debug>]
     repo-fellow event <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--until=<date>]
-    repo-fellow pr <command> [--site=<id>] [<args>]
-    repo-fellow tag <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>]
-    repo-fellow release <command> [--site=<id>] [--project=<id>] [--since=<id>]
+    repo-fellow pr <command> [--site=<id>] [--since=<id>] [--logging=<debug>]
+    repo-fellow tag <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--logging=<debug>]
+    repo-fellow release <command> [--site=<id>] [--project=<id>] [--since=<id>] [--logging=<debug>]
 
 Options: 
     -h,--help 
@@ -22,6 +22,7 @@ Options:
     --private       processing private projects
     --until=<date>   until date of commit
     --style=<str>    commit message style check string
+    --logging=<debug> logging level
 
 Example:
     repo-fellow db init --conn=root:xxx@localhost
@@ -64,14 +65,15 @@ def parse_projects_args(arguments,injector):
     return injector.get_projects( site = arguments["--site"] )
 
 def main():
-    logging.basicConfig(filename = "log/fellow.log", level = logging.INFO, format = "%(asctime)s %(message)s", filemode='a')
+    arguments = docopt(__doc__, version = 'Repo Fellow')
+    if arguments["--logging"] == "debug":
+        logging.basicConfig(filename = "log/fellow.log",level = logging.DEBUG,format = "%(asctime)s %(message)s", filemode = 'a')
+    else:
+        logging.basicConfig(filename = "log/fellow.log",level = logging.INFO,format = "%(asctime)s %(message)s", filemode = 'a')
     logger = logging.getLogger()    
-    
     ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
     logger.addHandler(ch)
 
-    arguments = docopt(__doc__, version = 'Repo Fellow')
     command = arguments["<command>"]
 
     db_user, db_password, db = get_arg("FELLOW_USER","repo"), get_arg("FELLOW_PASSWORD","fellow"), get_arg("FELLOW_DB","repo_fellow")
@@ -138,15 +140,12 @@ def main():
             data = Crawler(site,injector).detail_users(since = arguments["--since"],until = arguments["--until"])
             return
 
+    projects = parse_projects_args(arguments,injector)
     if arguments["pr"]:
         if command == "import":
-            project = arguments["<args>"]
-            data = Crawler.create_client(site).get_pull_requests(project)
-            injector.insert_data(Parser.parse_pulls(data))
-            logging.info("total imported pulls {}".format(len(data)))
-        return
+            Crawler(site,injector).import_pull_requests(projects)
+            return
 
-    projects = parse_projects_args(arguments,injector)
     if arguments["commit"]:
         if command == "import":
             until_date = None
