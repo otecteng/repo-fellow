@@ -11,6 +11,7 @@ Usage:
     repo-fellow pr <command> [--site=<id>] [--since=<id>] [--logging=<debug>]
     repo-fellow tag <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--logging=<debug>]
     repo-fellow release <command> [--site=<id>] [--project=<id>] [--since=<id>] [--logging=<debug>]
+    repo-fellow branch <command> [--site=<id>] [--project=<id>] [--since=<id>] [--limit=<n>] [--logging=<debug>]
 
 Options: 
     -h,--help 
@@ -180,6 +181,12 @@ def main():
         if command == "import":
             logging.info("importing release of {}".format(site.name))
             Crawler(site,injector).import_releases(projects)
+        return
+
+    if arguments["branch"]:
+        if command == "import":
+            logging.info("importing branch of {}".format(site.name))
+            Crawler(site,injector).import_branches(projects)
         return
 
     if arguments["group"]:

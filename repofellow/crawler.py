@@ -7,7 +7,7 @@ from sqlalchemy.orm.query import Query
 from repofellow.github_client import GithubClient
 from repofellow.gitlab_client import GitlabClient
 from repofellow.parser import Parser
-from repofellow.injector import Developer,Tag,Release,Commit,Project,Contributor,Event,Pull
+from repofellow.injector import Developer,Tag,Release,Commit,Project,Contributor,Event,Pull,Branch
 from repofellow.decorator import log_time
 
 
@@ -164,6 +164,20 @@ class Crawler:
             data = self.client.get_releases(i)
             logging.info("{} new release number {}".format(i.path,len(data)))
             data = Parser.json_to_db(data,Release,site = self.site)
+            for j in data:
+                j.project = i.path
+                j.project_oid = i.oid
+                ret = ret + data
+        self.injector.insert_data(ret)
+        return ret
+
+    @log_time
+    def import_branches(self,projects = None):
+        projects = self.get_default_projects(projects)
+        ret = []
+        for i in projects:
+            data = self.client.get_branches(i)
+            data = Parser.json_to_db(data,Branch,site = self.site)
             for j in data:
                 j.project = i.path
                 j.project_oid = i.oid

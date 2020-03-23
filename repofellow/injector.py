@@ -341,6 +341,24 @@ class Pull(Base):
             ret.user = data["author"]["username"]
         return ret
 
+class Branch(Base):
+    __tablename__ = 'project_branch'
+    iid = Column(Integer, primary_key=True)
+    oid = Column(Integer)
+    site = Column(Integer)
+    project_oid = Column(Integer)
+    project = Column(String(64))
+    created_at = Column(DateTime)
+    name = Column(String(64))
+    protected = Column(Boolean)
+
+    def from_github(data,ret = None):
+        if ret is None:
+            ret = Branch()
+        Convertor.json2db(data,ret,"name")
+        Convertor.json2db(data,ret,"protected")
+        return ret
+
 class Tag(Base):
     __tablename__ = 'tag'
     iid = Column(Integer, primary_key=True)

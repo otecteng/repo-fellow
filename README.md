@@ -52,6 +52,7 @@ commits: get total commits pages of project
 repofellow commit import --site=site_iid [--since=iid] [--project=project_iid] [--limit=200]
 repofellow tag import --site=site_iid [--since=iid]
 repofellow release import --site=site_iid [--since=iid]
+repofellow branch import --site=site_iid [--since=iid]
 repofellow commit style --site=site_iid --since=iid --style="(.*)#(.*)\s+(.*):\s+(.*?)"
 ```
 

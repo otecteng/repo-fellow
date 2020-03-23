@@ -153,3 +153,15 @@ CREATE TABLE IF NOT EXISTS `project_event`
   description  VARCHAR(1024),
   created_at    DATETIME
 )CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `project_branch`
+(
+  iid     BIGINT PRIMARY KEY AUTO_INCREMENT,    
+  oid      BIGINT,
+  project  VARCHAR(128),
+  project_oid     BIGINT,
+  site     BIGINT,
+  name   VARCHAR(64),
+  protected   BOOLEAN,
+  created_at    DATETIME
+)CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
