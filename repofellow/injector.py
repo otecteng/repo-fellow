@@ -135,6 +135,9 @@ class Commit(Base):
     total = Column(Integer)
     issue = Column(String(64))
     style_checked = Column(Boolean)
+    site = Column(Integer)
+    project_oid = Column(Integer)
+    oid = Column(Integer)
     
     def __init__(self,data):
         self.id = data["id"]
@@ -310,7 +313,8 @@ class Pull(Base):
     base = Column(String(512))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-
+    site = Column(Integer)
+    
     def from_github(data,ret = None):
         if ret is None:
             ret = Pull()
@@ -324,6 +328,17 @@ class Pull(Base):
             ret.head = data["head"]["sha"]
         if "base" in data and data["base"]:
             ret.base = data["base"]["sha"]
+        return ret
+
+    def from_gitlab(data,ret = None):
+        if ret is None:
+            ret = Pull()
+        Convertor.json2db(data,ret,"state")
+        Convertor.json2db(data,ret,"title")
+        Convertor.json2db(data,ret,"created_at")
+        Convertor.json2db(data,ret,"updated_at")
+        if "author" in data and data["author"]:
+            ret.user = data["author"]["username"]
         return ret
 
 class Tag(Base):

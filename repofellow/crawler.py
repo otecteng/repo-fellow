@@ -192,7 +192,6 @@ class Crawler:
     @log_time
     def import_events(self,projects = None,limit = None):
         projects = self.get_default_projects(projects)
-        print(len(projects))
         for idx,i in enumerate(projects):
             data = self.client.get_project_events(i)
             new_events = Parser.json_to_db(data, Event,format=self.site.server_type, project=i, site=self.site)
