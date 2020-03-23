@@ -430,15 +430,29 @@ class Contributor(Base):
 
     @staticmethod
     def from_github(data,project):
-        return list(map(lambda x:Contributor(x,project),data))
+        ret = []
+        for i in data:
+            c = Contributor(i,project)
+            c.contribution = i["contributions"]
+            c.developer = i["login"]
+            c.developer_oid = i["id"]
+            ret.append(c)
+        return ret
+
+    @staticmethod
+    def from_gitee(data,project):
+        ret = []
+        for i in data:
+            c = Contributor(i,project)
+            c.contribution = i["contributions"]
+            c.developer = i["name"]
+            ret.append(c)
+        return ret
 
     def __init__(self,json_data,project):
         self.project = project.path
         self.project_oid = project.oid
         self.site = project.site
-        self.developer = json_data["login"]
-        self.developer_oid = json_data["id"]
-        self.contribution = json_data["contributions"]
 
     def __str__(self):
         return "{}<={}[{}]".format(self.project,self.developer,self.contribution)

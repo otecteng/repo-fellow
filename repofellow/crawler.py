@@ -106,8 +106,12 @@ class Crawler:
         contribution_items = []
         for paged_objs in self.page_objects(projects,100):
             data = self.execute_parallel(lambda x:(x,self.client.get_contributors(x)),paged_objs)
-            for i in data:
-                contribution_items = contribution_items + Contributor.from_github(data[i],i)
+            if self.site.server_type == "github":
+                for i in data:
+                    contribution_items = contribution_items + Contributor.from_github(data[i],i)
+            if self.site.server_type == "gitee":
+                for i in data:
+                    contribution_items = contribution_items + Contributor.from_gitee(data[i],i)
         self.injector.insert_data(contribution_items)
         
     @log_time
