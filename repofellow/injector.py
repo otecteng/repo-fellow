@@ -64,12 +64,28 @@ class Project(Base):
         return ret
 
     @staticmethod
-    def from_gitlab(data):
+    def from_gitee(data,ret = None):
+        if ret is None:
+            ret = Project()
+        Convertor.json2db(data,ret,"id","oid")
+        Convertor.json2db(data,ret,"full_name","path")
+        Convertor.json2db(data,ret,"updated_at")
+        Convertor.json2db(data,ret,"created_at")
+        Convertor.json2db(data,ret,"description")
+        Convertor.json2db(data,ret,"pushed_at")
+        Convertor.json2db(data,ret,"language")
+        Convertor.json2db(data,ret,"size")
+        Convertor.json2db(data,ret,"private")
+        if "owner" in data and data["owner"]:
+            ret.owner = data["owner"]["login"]
+        return ret
+
+    @staticmethod
+    def from_gitlab(data,ret = None):
         if not "owner" in data:
             print("[INFO]:empty owner {}".format(data["path_with_namespace"]))
             data["owner"] = {"username":""}
         return Project(data)
-
 
 class Site(Base):
     __tablename__ = 'site'
