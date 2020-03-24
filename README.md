@@ -92,5 +92,6 @@ sudo ln -s /usr/bin/python3.7 /usr/bin/python3
 sudo apt-get install python3.7-gdbm
 sudo apt install python3-pip
 pip3 install wheel
-
 ```
+
+Release Notes
