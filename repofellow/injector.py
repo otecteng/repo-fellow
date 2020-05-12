@@ -93,6 +93,7 @@ class Site(Base):
     name = Column(String(64))
     server_type = Column(String(64))
     url = Column(String(64))
+    user = Column(String(64))
     token = Column(String(64))
     created_at = Column(DateTime)
     def __str__(self):
@@ -392,6 +393,15 @@ class Tag(Base):
         Convertor.json2db(data,ret,"name")
         if "commit" in data and data["commit"]:
             ret.commit = data["commit"]["sha"]
+        return ret
+
+    def from_gitlab(data,ret = None):
+        if ret is None:
+            ret = Tag()
+        Convertor.json2db(data,ret,"name")
+        if "commit" in data and data["commit"]:
+            ret.commit = data["commit"]["id"]
+            ret.created_at = datetime.datetime.strptime(data["commit"]["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
         return ret
 
 class Release(Base):

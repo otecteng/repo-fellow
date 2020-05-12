@@ -6,15 +6,15 @@ import repofellow.organization
 
 class CrawlerClient:
     
-    def __init__(self,site,token,data_path = "./data"):
+    def __init__(self,site,data_path = "./data"):
         self.site = site
-        self.token = token
+        self.token = self.site.token
         self.session = HTMLSession()
         self.data_path = data_path
         self.recordsPerPage = 100
 
     def getSingleResource(self,url,retry = True):
-        query = self.site + url 
+        query = self.site.url + url 
         logging.info(query)
         rel_next = None
         rel_last = None
@@ -60,7 +60,7 @@ class CrawlerClient:
             _last_field = _last_field.split('/')
         data = []
         while True:
-            query = self.site + url + "&page={}&per_page={}".format(_page,_recordsPerPage)
+            query = self.site.url + url + "&page={}&per_page={}".format(_page,_recordsPerPage)
             logging.debug(query)
             try:
                 response = self.session.get(url = query, timeout = 20)

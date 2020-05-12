@@ -17,11 +17,11 @@ class Crawler:
     @staticmethod
     def create_client(site):
         if site.server_type == "github":
-            return GithubClient(site.url,site.token)
+            return GithubClient(site)
         if site.server_type == "gitlab":
-            return GitlabClient(site.url,site.token)
+            return GitlabClient(site)
         if site.server_type == "gitee":
-            return GiteeClient(site.url,site.token)
+            return GiteeClient(site)
         return None
 
     def __init__(self,site,injector = None):
@@ -153,7 +153,7 @@ class Crawler:
         for i in projects:
             tags = self.client.get_tags(i)
             logging.info("{} new tag number {}".format(i.path,len(tags)))
-            tags = Parser.json_to_db(tags,Tag,site = self.site)
+            tags = Parser.json_to_db(tags,Tag,format = self.site.server_type,site = self.site)
             for x in tags:
                 x.project_oid = i.oid
                 x.project = i.path
@@ -170,7 +170,7 @@ class Crawler:
         for i in projects:
             data = self.client.get_releases(i)
             logging.info("{} new release number {}".format(i.path,len(data)))
-            data = Parser.json_to_db(data,Release,site = self.site)
+            data = Parser.json_to_db(data,Release,format = self.site.server_type,site = self.site)
             for j in data:
                 j.project = i.path
                 j.project_oid = i.oid

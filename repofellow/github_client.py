@@ -6,8 +6,8 @@ import repofellow.organization
 from repofellow.crawler_client import CrawlerClient
 
 class GithubClient(CrawlerClient):
-    def __init__(self,site,token,data_path = "./data"):
-        super(GithubClient, self).__init__(site,token,data_path)
+    def __init__(self,site,data_path = "./data"):
+        super(GithubClient, self).__init__(site,data_path)
         self.session.headers.update({"Authorization":"Bearer {}".format(self.token)})
 
     def gqResource(self,query):
