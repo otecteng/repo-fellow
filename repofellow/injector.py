@@ -82,10 +82,20 @@ class Project(Base):
 
     @staticmethod
     def from_gitlab(data,ret = None):
-        if not "owner" in data:
-            print("[INFO]:empty owner {}".format(data["path_with_namespace"]))
-            data["owner"] = {"username":""}
-        return Project(data)
+        if ret is None:
+            ret = Project()
+        if len(data) == 0:
+            logging.warning("empty data, project {}".format(ret.iid))
+            return ret
+        Convertor.json2db(data,ret,"id","oid")
+        Convertor.json2db(data,ret,"path_with_namespace","path")
+        Convertor.json2db(data,ret,"created_at")
+        Convertor.json2db(data,ret,"last_activity_at","updated_at")
+        if "owner" in data and data["owner"]:
+            ret.owner = data["owner"]["username"]
+        if "statistics" in data and data["statistics"]:
+            ret.size = data["statistics"]["repository_size"]
+        return ret
 
 class Site(Base):
     __tablename__ = 'site'
@@ -425,6 +435,15 @@ class Release(Base):
             ret.author = data["author"]["login"]
         else:
             logging.info("missing author")
+        return ret
+
+    def from_gitlab(data,ret = None):
+        if ret is None:
+            ret = Tag()
+        Convertor.json2db(data,ret,"name")
+        if "commit" in data and data["commit"]:
+            ret.commit = data["commit"]["id"]
+            ret.created_at = datetime.datetime.strptime(data["commit"]["created_at"][:19], "%Y-%m-%dT%H:%M:%S")
         return ret
 
 class Contributor(Base):

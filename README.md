@@ -37,7 +37,7 @@ repofellow project import --site=site_iid --private
 
 1.6 get project size and statistic  
 ```
-repofellow project update --site=site_iid
+repofellow project update --site=site_iid --since=iid
 repofellow project contributor --site=site_iid --since=iid
 repofellow project stat --site=site_iid --since=iid
 repofellow project commits --site=site_iid --since=iid
@@ -71,26 +71,3 @@ pip3 install -r requirements.txt
 python3 -m repofellow 
 ```
 
-## Build package  
-```
-python3 setup.py sdist bdist_wheel
-```
-## Deploy package  
-```
-pip3 install repofellow.whl
-```
-
-## For ubuntu 16  
-```
-sudo apt-get update
-export LC_ALL=C
-sudo apt install software-properties-common
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt-get update
-sudo apt install python3.7
-sudo ln -s /usr/bin/python3.7 /usr/bin/python3
-sudo apt-get install python3.7-gdbm
-sudo apt install python3-pip
-pip3 install wheel
-
-```

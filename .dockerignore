@@ -1,0 +1,12 @@
+__pycache__
+.vscode
+build/
+infrastructure/
+data/
+doc/
+log/*
+env/
+oauth/
+test/
+*.csv
+*.json

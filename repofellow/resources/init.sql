@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS `pull`
   iid     BIGINT PRIMARY KEY AUTO_INCREMENT,
   oid     BIGINT,
   project      VARCHAR(64),
+  project_oid Integer,
+  site Integer,
   created_at    DATETIME,
   updated_at    DATETIME,
   state  VARCHAR(64),

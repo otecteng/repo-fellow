@@ -13,7 +13,7 @@ class GitlabClient(CrawlerClient):
 
     def get_projects(self, start_from = None, private = False):
         if private:
-            return self.getResource("/api/v4/projects?membership=true".format(self.site.user))
+            return self.getResource("/api/v4/projects?membership=true&statistics=true")
         else:
             return self.getResource("/api/v4/projects?")
             
