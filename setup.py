@@ -21,7 +21,7 @@ setuptools.setup(
     ],
     install_requires=[
         "SQLAlchemy==1.3.13",
-        "requests==2.22.0",
+        "requests==2.31.0",
         "requests-html==0.9.0",
         "docopt==0.6.2",
         "docutils==0.14",
